@@ -1,0 +1,29 @@
+{
+  "id": "typhoon-family",
+  "title": "Typhoon Family",
+  "original_title": null,
+  "category": "series",
+  "subcategories": [
+    "kdrama",
+    "limited-series"
+  ],
+  "format": "series",
+  "status": "ended",
+  "genres": [
+    "drama"
+  ],
+  "countries": [
+    "KR"
+  ],
+  "studios": [],
+  "directors": [],
+  "first_release_year": 2026,
+  "external_ids": {
+    "imdb": null,
+    "tmdb": null,
+    "anilist": null,
+    "myanimelist": null
+  },
+  "poster": null,
+  "notes": "Dado demonstrativo para K-drama de temporada limitada."
+}

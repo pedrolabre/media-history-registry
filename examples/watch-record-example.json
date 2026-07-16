@@ -1,0 +1,17 @@
+{
+  "id": "2026-attack-on-titan-s04",
+  "media_id": "attack-on-titan",
+  "year": 2026,
+  "unit": {
+    "type": "season",
+    "season_number": 4
+  },
+  "watch_status": "completed",
+  "started_at": "2026-01-10",
+  "finished_at": "2026-01-24",
+  "platform": "Crunchyroll",
+  "rewatch": false,
+  "rating": null,
+  "favorite": false,
+  "notes": "Exemplo documental de Watch Record associado ao Media Item de exemplo."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "2026-bridgerton-s04",
+  "media_id": "bridgerton",
+  "year": 2026,
+  "unit": {
+    "type": "season",
+    "season_number": 4
+  },
+  "watch_status": "watching",
+  "started_at": "2026-06-12",
+  "finished_at": null,
+  "platform": "Netflix",
+  "rewatch": false,
+  "rating": null,
+  "favorite": false,
+  "notes": "Dado demonstrativo para serie em andamento."
+}

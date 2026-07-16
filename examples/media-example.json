@@ -1,0 +1,30 @@
+{
+  "id": "attack-on-titan",
+  "title": "Attack on Titan",
+  "original_title": "Shingeki no Kyojin",
+  "category": "anime",
+  "subcategories": [],
+  "format": "series",
+  "status": "ended",
+  "genres": [
+    "action",
+    "dark-fantasy"
+  ],
+  "countries": [
+    "JP"
+  ],
+  "studios": [
+    "Wit Studio",
+    "MAPPA"
+  ],
+  "directors": [],
+  "first_release_year": 2013,
+  "external_ids": {
+    "imdb": null,
+    "tmdb": null,
+    "anilist": null,
+    "myanimelist": null
+  },
+  "poster": null,
+  "notes": "Exemplo documental de Media Item."
+}

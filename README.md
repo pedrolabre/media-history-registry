@@ -168,6 +168,27 @@ Estrutura publica atual:
 ```text
 media-history-registry/
 |-- README.md
+|-- data/
+|   |-- history/
+|   |   |-- 2024/
+|   |   |   `-- your-name.json
+|   |   `-- 2026/
+|   |       |-- boots-s01.json
+|   |       |-- bridgerton-s04.json
+|   |       |-- spy-family-s02.json
+|   |       `-- typhoon-family.json
+|   `-- media/
+|       |-- anime/
+|       |   `-- spy-family.json
+|       |-- movie/
+|       |   `-- your-name.json
+|       `-- series/
+|           |-- boots.json
+|           |-- bridgerton.json
+|           `-- typhoon-family.json
+|-- examples/
+|   |-- media-example.json
+|   `-- watch-record-example.json
 `-- schemas/
     |-- media.schema.json
     `-- watch-record.schema.json

@@ -1,0 +1,27 @@
+{
+  "id": "bridgerton",
+  "title": "Bridgerton",
+  "original_title": null,
+  "category": "series",
+  "subcategories": [],
+  "format": "series",
+  "status": "ongoing",
+  "genres": [
+    "drama",
+    "romance"
+  ],
+  "countries": [
+    "US"
+  ],
+  "studios": [],
+  "directors": [],
+  "first_release_year": 2020,
+  "external_ids": {
+    "imdb": null,
+    "tmdb": null,
+    "anilist": null,
+    "myanimelist": null
+  },
+  "poster": null,
+  "notes": "Dado demonstrativo para serie em andamento."
+}

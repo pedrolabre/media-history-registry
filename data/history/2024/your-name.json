@@ -1,0 +1,16 @@
+{
+  "id": "2024-your-name",
+  "media_id": "your-name",
+  "year": 2024,
+  "unit": {
+    "type": "movie"
+  },
+  "watch_status": "completed",
+  "started_at": "2024-11-03",
+  "finished_at": "2024-11-03",
+  "platform": null,
+  "rewatch": false,
+  "rating": 4.5,
+  "favorite": true,
+  "notes": "Dado demonstrativo para unidade movie concluida."
+}
