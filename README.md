@@ -189,9 +189,12 @@ media-history-registry/
 |-- examples/
 |   |-- media-example.json
 |   `-- watch-record-example.json
-`-- schemas/
-    |-- media.schema.json
-    `-- watch-record.schema.json
+|-- schemas/
+|   |-- media.schema.json
+|   `-- watch-record.schema.json
+`-- scripts/
+    |-- slugify.js
+    `-- validate.js
 ```
 
 > A estrutura vai crescer junto com o codigo. Tudo que for adicionado deve
