@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch-record.schema.json",
+  "title": "Watch Record",
+  "description": "Contract for a single personal audiovisual consumption event.",
+  "$comment": "Repository-aware rules, such as media_id existence, year matching the parent folder, id matching unit-derived filenames, and finished_at not preceding started_at, must be enforced by validation scripts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "media_id",
+    "year",
+    "unit",
+    "watch_status"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/watchRecordId",
+      "description": "Unique record identifier, conventionally prefixed with the watch year."
+    },
+    "media_id": {
+      "$ref": "#/$defs/slug",
+      "description": "Foreign-key style reference to a Media Item id."
+    },
+    "year": {
+      "$ref": "#/$defs/year",
+      "description": "Year of consumption."
+    },
+    "unit": {
+      "$ref": "#/$defs/unit",
+      "description": "Structured description of what was watched within the media item."
+    },
+    "watch_status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "watching",
+        "completed",
+        "paused",
+        "dropped",
+        "rewatching",
+        "abandoned"
+      ],
+      "description": "Personal watch status for this consumption event."
+    },
+    "started_at": {
+      "$ref": "#/$defs/nullableDate",
+      "default": null,
+      "description": "Start date in YYYY-MM-DD format, when known."
+    },
+    "finished_at": {
+      "$ref": "#/$defs/nullableDate",
+      "default": null,
+      "description": "Finish date in YYYY-MM-DD format, when known."
+    },
+    "platform": {
+      "$ref": "#/$defs/nullableNonEmptyString",
+      "default": null,
+      "description": "Platform or source where the media was watched."
+    },
+    "rewatch": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this record represents a rewatch."
+    },
+    "rating": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "default": null,
+      "description": "Personal rating. The final scale is intentionally left to future validation."
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this viewing is marked as a personal favorite."
+    },
+    "notes": {
+      "$ref": "#/$defs/nullableNonEmptyString",
+      "default": null,
+      "description": "Free-form notes about this viewing event."
+    }
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "watchRecordId": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[a-z0-9]+(?:-[a-z0-9]+)*(?:-rewatch)?$"
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 1878,
+      "maximum": 9999
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullableNonEmptyString": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "nullableDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "unit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "season_number"
+          ],
+          "properties": {
+            "type": {
+              "const": "season"
+            },
+            "season_number": {
+              "$ref": "#/$defs/positiveInteger"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "limited_season"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "episode_number"
+          ],
+          "properties": {
+            "type": {
+              "const": "episode"
+            },
+            "season_number": {
+              "$ref": "#/$defs/positiveInteger"
+            },
+            "episode_number": {
+              "$ref": "#/$defs/positiveInteger"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "arc_name"
+          ],
+          "properties": {
+            "type": {
+              "const": "arc"
+            },
+            "arc_name": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "movie"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "special"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "full_work"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "const": "unspecified"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

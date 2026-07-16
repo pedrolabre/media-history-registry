@@ -163,11 +163,14 @@ Esse fluxo mantem o historico simples, transparente e sob seu controle.
 
 ## Estrutura do Projeto
 
-Estrutura publica planejada para o primeiro commit:
+Estrutura publica atual:
 
 ```text
 media-history-registry/
-`-- README.md
+|-- README.md
+`-- schemas/
+    |-- media.schema.json
+    `-- watch-record.schema.json
 ```
 
 > A estrutura vai crescer junto com o codigo. Tudo que for adicionado deve

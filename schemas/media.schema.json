@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "media.schema.json",
+  "title": "Media Item",
+  "description": "Contract for a single audiovisual work stored as a Media Item.",
+  "$comment": "Repository-aware rules, such as id matching the filename and category matching the parent folder, must be enforced by validation scripts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "category",
+    "format",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/slug",
+      "description": "Unique kebab-case identifier for the work."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Primary display title in the user's preferred language."
+    },
+    "original_title": {
+      "$ref": "#/$defs/nullableNonEmptyString",
+      "default": null,
+      "description": "Original-language title, when different or relevant."
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "movie",
+        "series",
+        "anime",
+        "documentary",
+        "docuseries",
+        "special",
+        "short",
+        "other"
+      ],
+      "description": "Primary taxonomy category for repository organization."
+    },
+    "subcategories": {
+      "type": "array",
+      "default": [],
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/tag"
+      },
+      "description": "Fine-grained classification tags such as kdrama or miniseries."
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "series",
+        "movie",
+        "short",
+        "special"
+      ],
+      "description": "Structural content format, independent from category."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ongoing",
+        "ended",
+        "cancelled",
+        "hiatus",
+        "unknown"
+      ],
+      "description": "Production status of the work."
+    },
+    "genres": {
+      "type": "array",
+      "default": [],
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/tag"
+      },
+      "description": "Free-form genre tags, conventionally lowercase kebab-case."
+    },
+    "countries": {
+      "type": "array",
+      "default": [],
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/countryCode"
+      },
+      "description": "Country of origin codes using ISO 3166-1 alpha-2."
+    },
+    "studios": {
+      "type": "array",
+      "default": [],
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      },
+      "description": "Production studios or companies."
+    },
+    "directors": {
+      "type": "array",
+      "default": [],
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      },
+      "description": "Director names when known or relevant."
+    },
+    "first_release_year": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1878,
+      "maximum": 9999,
+      "default": null,
+      "description": "Year of first release or airing."
+    },
+    "external_ids": {
+      "$ref": "#/$defs/externalIds",
+      "default": {},
+      "description": "Optional identifiers from external media services."
+    },
+    "poster": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri-reference",
+      "minLength": 1,
+      "default": null,
+      "description": "Future-ready path or URL for a poster image."
+    },
+    "notes": {
+      "$ref": "#/$defs/nullableNonEmptyString",
+      "default": null,
+      "description": "Free-form notes about the work."
+    }
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "tag": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "countryCode": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nullableNonEmptyString": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "externalIds": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "imdb": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^tt[0-9]{7,10}$",
+          "default": null
+        },
+        "tmdb": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/positiveInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "anilist": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/positiveInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "myanimelist": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/positiveInteger"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      }
+    }
+  }
+}
