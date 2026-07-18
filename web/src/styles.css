@@ -422,7 +422,7 @@ p {
 
 .library-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-3);
 }
 
@@ -540,6 +540,159 @@ p {
 .loader-error-list code {
   color: var(--color-ink);
   font-weight: 900;
+}
+
+.normalization-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.normalization-panel {
+  min-width: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-sky);
+  box-shadow: var(--shadow-soft);
+}
+
+.normalization-panel:nth-child(2) {
+  background: var(--color-lime);
+}
+
+.normalization-panel:nth-child(3) {
+  background: var(--color-pink);
+}
+
+.normalization-panel:nth-child(4) {
+  background: var(--color-mint);
+}
+
+.normalization-panel:nth-child(5) {
+  background: var(--color-lilac);
+}
+
+.normalization-panel:nth-child(6) {
+  background: var(--color-coral);
+}
+
+.normalization-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.normalization-list,
+.unit-record-list,
+.orphan-record-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.normalization-list li,
+.unit-record-list li,
+.orphan-record-list li {
+  min-width: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  background: var(--color-board);
+  box-shadow: 3px 3px 0 var(--color-shadow);
+}
+
+.normalization-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.normalization-list span,
+.unit-record-list span,
+.orphan-record-list span {
+  min-width: 0;
+  font-weight: 900;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.normalization-list strong,
+.unit-record-list strong,
+.orphan-record-list strong {
+  min-width: 0;
+  font-family: var(--font-display);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.normalization-list small {
+  grid-column: 1 / -1;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.normalization-empty {
+  margin-bottom: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: var(--color-board);
+  box-shadow: 3px 3px 0 var(--color-shadow);
+  color: var(--color-ink);
+  font-weight: 850;
+}
+
+.unit-record-list li {
+  display: grid;
+  grid-template-columns: minmax(54px, auto) minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.unit-record-list strong {
+  justify-self: start;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 5px 7px;
+  background: var(--color-dark);
+  color: var(--color-board);
+  font-size: 0.9rem;
+}
+
+.unit-record-list small {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.orphan-record-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.orphan-record-list div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.orphan-record-list code {
+  justify-self: end;
+  max-width: 100%;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  background: var(--color-dark);
+  color: var(--color-board);
 }
 
 .generator-board,
@@ -940,6 +1093,7 @@ p {
   .generator-board,
   .route-board,
   .library-metrics,
+  .normalization-board,
   .generated-summary,
   .json-file-info,
   .json-actions {
@@ -947,6 +1101,10 @@ p {
   }
 
   .file-card-wide {
+    grid-column: auto;
+  }
+
+  .normalization-panel-wide {
     grid-column: auto;
   }
 
@@ -992,6 +1150,17 @@ p {
 
   .source-ledger {
     grid-template-columns: 1fr;
+  }
+
+  .normalization-list li,
+  .unit-record-list li,
+  .orphan-record-list li {
+    grid-template-columns: 1fr;
+  }
+
+  .unit-record-list small,
+  .orphan-record-list code {
+    justify-self: start;
   }
 
   .form-grid {

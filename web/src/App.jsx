@@ -170,19 +170,23 @@ function isActive(pathname, href) {
 }
 function LibraryWorkspace({ data }) {
     const isEmpty = data.counts.mediaItems === 0 && data.counts.watchRecords === 0;
+    const relationships = data.normalized.relationships;
     return (<div className="library-loader">
       <div className="library-metrics" aria-label="Dados carregados">
         <MetricCard detail="data/media" label="Media Items" value={data.counts.mediaItems}/>
         <MetricCard detail="data/history" label="Watch Records" value={data.counts.watchRecords}/>
-        <MetricCard detail="pastas detectadas" label="Categorias" value={data.counts.categories}/>
-        <MetricCard detail="anos detectados" label="Anos" value={data.counts.years}/>
+        <MetricCard detail="media_id resolvido" label="Ligados" value={relationships.linkedWatchRecords}/>
+        <MetricCard detail="media_id ausente" label="Orfaos" value={relationships.orphanWatchRecords}/>
       </div>
 
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
       {data.status !== "error" && isEmpty ? <LoaderEmptyState /> : null}
 
-      {data.status !== "error" && !isEmpty ? <LoaderReadyState data={data}/> : null}
+      {data.status !== "error" && !isEmpty ? (<>
+          <LoaderReadyState data={data}/>
+          <NormalizationDashboard data={data}/>
+        </>) : null}
     </div>);
 }
 function MetricCard({ detail, label, value }) {
@@ -193,6 +197,7 @@ function MetricCard({ detail, label, value }) {
     </article>);
 }
 function LoaderReadyState({ data }) {
+    const relationships = data.normalized.relationships;
     return (<article className="loader-state loader-state-ready" role="status">
       <div>
         <span className="file-card-label">Loader</span>
@@ -212,6 +217,17 @@ function LoaderReadyState({ data }) {
           <dd>{formatList(data.years)}</dd>
         </div>
         <div>
+          <dt>Relacoes</dt>
+          <dd>
+            {relationships.linkedWatchRecords} ligados /{" "}
+            {relationships.orphanWatchRecords} orfaos
+          </dd>
+        </div>
+        <div>
+          <dt>Labels derivados</dt>
+          <dd>{formatUnitLabels(data.normalized.watchRecords)}</dd>
+        </div>
+        <div>
           <dt>Primeiro Media Item</dt>
           <dd>{formatPath(data.mediaItems[0]?.origin.path)}</dd>
         </div>
@@ -221,6 +237,74 @@ function LoaderReadyState({ data }) {
         </div>
       </dl>
     </article>);
+}
+function NormalizationDashboard({ data }) {
+    const { metrics, orphanWatchRecords, watchRecords } = data.normalized;
+    const productionRecordCounts = new Map(metrics.linkedWatchRecordsByProductionStatus.map((item) => [
+        item.key,
+        item.count
+    ]));
+    return (<section className="normalization-board" aria-label="Resumo normalizado">
+      <MetricBreakdown title="Anos" items={metrics.byYear} getLabel={(item) => item.year} getValue={(item) => `${item.count} registros`}/>
+      <CategoryBreakdown items={metrics.byCategory}/>
+      <MetricBreakdown title="Status pessoal" items={metrics.byWatchStatus} getLabel={(item) => formatMetricLabel(item.key)} getValue={(item) => `${item.count} registros`}/>
+      <MetricBreakdown title="Status de producao" items={metrics.byProductionStatus} getLabel={(item) => formatMetricLabel(item.key)} getValue={(item) => `${item.count} midias`} getMeta={(item) => `${productionRecordCounts.get(item.key) || 0} registros ligados`}/>
+      <UnitPreview records={watchRecords}/>
+      <OrphanWatchRecords records={orphanWatchRecords}/>
+    </section>);
+}
+function MetricBreakdown({ getLabel, getMeta, getValue, items, title }) {
+    return (<section className="normalization-panel">
+      <span className="file-card-label">{title}</span>
+      {items.length > 0 ? (<ul className="normalization-list">
+          {items.map((item) => (<li key={String(getLabel(item))}>
+              <span>{getLabel(item)}</span>
+              <strong>{getValue(item)}</strong>
+              {getMeta ? <small>{getMeta(item)}</small> : null}
+            </li>))}
+        </ul>) : (<p className="normalization-empty">Nenhum dado derivado.</p>)}
+    </section>);
+}
+function CategoryBreakdown({ items }) {
+    return (<section className="normalization-panel">
+      <span className="file-card-label">Categorias</span>
+      {items.length > 0 ? (<ul className="normalization-list">
+          {items.map((item) => (<li key={item.category}>
+              <span>{formatMetricLabel(item.category)}</span>
+              <strong>{item.watchRecords} registros</strong>
+              <small>{item.mediaItems} midias</small>
+            </li>))}
+        </ul>) : (<p className="normalization-empty">Nenhum dado derivado.</p>)}
+    </section>);
+}
+function UnitPreview({ records }) {
+    const previewRecords = records.slice(0, 6);
+    return (<section className="normalization-panel normalization-panel-wide">
+      <span className="file-card-label">Unidades</span>
+      {previewRecords.length > 0 ? (<ul className="unit-record-list">
+          {previewRecords.map((record) => (<li key={record.id}>
+              <strong>{record.unitLabel}</strong>
+              <span>{record.title}</span>
+              <small>
+                {record.year} / {formatMetricLabel(record.watchStatus)}
+              </small>
+            </li>))}
+        </ul>) : (<p className="normalization-empty">Nenhum label derivado.</p>)}
+    </section>);
+}
+function OrphanWatchRecords({ records }) {
+    return (<section className="normalization-panel normalization-panel-wide">
+      <span className="file-card-label">Orfaos</span>
+      {records.length > 0 ? (<ul className="orphan-record-list">
+          {records.map((record) => (<li key={record.id}>
+              <div>
+                <strong>{record.id}</strong>
+                <span>media_id: {record.mediaId}</span>
+              </div>
+              <code>{record.origin.path}</code>
+            </li>))}
+        </ul>) : (<p className="normalization-empty">Nenhum Watch Record orfao no snapshot atual.</p>)}
+    </section>);
 }
 function LoaderErrorState({ data }) {
     return (<article className="loader-state loader-state-error" role="alert">
@@ -255,8 +339,15 @@ function LoaderEmptyState() {
 function formatList(values) {
     return values.length > 0 ? values.join(", ") : "nenhum";
 }
+function formatMetricLabel(value) {
+    return String(value).replace(/[_-]/g, " ");
+}
 function formatPath(value) {
     return value || "nenhum arquivo";
+}
+function formatUnitLabels(records) {
+    const labels = Array.from(new Set(records.map((record) => record.unitLabel)));
+    return labels.length > 0 ? labels.join(", ") : "nenhum";
 }
 function RouteWorkspace({ label, path, value }) {
     return (<div className="route-board">
