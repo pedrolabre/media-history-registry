@@ -130,11 +130,12 @@ function resolveRoute(pathname) {
     }
     const yearMatch = /^\/library\/year\/([^/]+)$/.exec(pathname);
     if (yearMatch) {
+        const year = decodeURIComponent(yearMatch[1]);
         return {
             eyebrow: "Ano",
-            title: "Recorte por ano",
-            description: "Uma gaveta pronta para agrupar tudo que foi assistido em um ano.",
-            content: <RouteWorkspace label="Ano" path="data/history/{year}" value={yearMatch[1]}/>
+            title: `Ano ${year}`,
+            description: "Um recorte da biblioteca com somente os registros encontrados para este ano.",
+            content: <YearLibraryWorkspace data={staticLibraryData} year={year}/>
         };
     }
     const mediaMatch = /^\/library\/media\/([^/]+)$/.exec(pathname);
@@ -169,24 +170,26 @@ function isActive(pathname, href) {
     return pathname === href;
 }
 function LibraryWorkspace({ data }) {
-    const isEmpty = data.counts.mediaItems === 0 && data.counts.watchRecords === 0;
-    const relationships = data.normalized.relationships;
+    const yearGroups = data.normalized.yearGroups;
+    const isEmpty = yearGroups.length === 0;
     return (<div className="library-loader">
-      <div className="library-metrics" aria-label="Dados carregados">
-        <MetricCard detail="data/media" label="Media Items" value={data.counts.mediaItems}/>
-        <MetricCard detail="data/history" label="Watch Records" value={data.counts.watchRecords}/>
-        <MetricCard detail="media_id resolvido" label="Ligados" value={relationships.linkedWatchRecords}/>
-        <MetricCard detail="media_id ausente" label="Orfaos" value={relationships.orphanWatchRecords}/>
-      </div>
+      <LibrarySummary data={data}/>
 
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
-      {data.status !== "error" && isEmpty ? <LoaderEmptyState /> : null}
+      {isEmpty ? <LibraryEmptyState /> : null}
 
-      {data.status !== "error" && !isEmpty ? (<>
-          <LoaderReadyState data={data}/>
-          <NormalizationDashboard data={data}/>
-        </>) : null}
+      {!isEmpty ? <YearLibrary yearGroups={yearGroups}/> : null}
+    </div>);
+}
+function YearLibraryWorkspace({ data, year }) {
+    const yearGroup = findYearGroup(data.normalized.yearGroups, year);
+    return (<div className="library-loader">
+      <LibrarySummary data={data}/>
+
+      {data.status === "error" ? <LoaderErrorState data={data}/> : null}
+
+      {yearGroup ? (<YearLibrary isSingleYear yearGroups={[yearGroup]}/>) : (<YearEmptyState hasLibraryRecords={data.normalized.watchRecords.length > 0} year={year}/>)}
     </div>);
 }
 function MetricCard({ detail, label, value }) {
@@ -196,115 +199,98 @@ function MetricCard({ detail, label, value }) {
       <p>{detail}</p>
     </article>);
 }
-function LoaderReadyState({ data }) {
+function LibrarySummary({ data }) {
     const relationships = data.normalized.relationships;
-    return (<article className="loader-state loader-state-ready" role="status">
-      <div>
-        <span className="file-card-label">Loader</span>
-        <h2>Snapshot carregado</h2>
+    return (<div className="library-metrics" aria-label="Resumo da biblioteca">
+      <MetricCard detail="data/media" label="Media Items" value={data.counts.mediaItems}/>
+      <MetricCard detail="data/history" label="Watch Records" value={data.counts.watchRecords}/>
+      <MetricCard detail="anos carregados" label="Anos" value={data.normalized.yearGroups.length}/>
+      <MetricCard detail="media_id ausente" label="Orfaos" value={relationships.orphanWatchRecords}/>
+    </div>);
+}
+function YearLibrary({ isSingleYear = false, yearGroups }) {
+    return (<section className="year-library" aria-label={isSingleYear ? "Biblioteca do ano" : "Biblioteca por ano"}>
+      {!isSingleYear ? (<div className="year-library-intro">
+          <span className="file-card-label">Biblioteca por ano</span>
+          <p>
+            Registros agrupados por ano em ordem decrescente, calculados a
+            partir dos JSONs carregados no build.
+          </p>
+        </div>) : null}
+
+      {yearGroups.map((group) => (<YearGroup group={group} key={group.year}/>))}
+    </section>);
+}
+function YearGroup({ group }) {
+    const headingId = `library-year-${group.year}`;
+    return (<section className="year-group" aria-labelledby={headingId}>
+      <header className="year-group-header">
+        <div>
+          <span className="file-card-label">Ano</span>
+          <h2 id={headingId}>{group.year}</h2>
+        </div>
         <p>
-          Os dados abaixo foram descobertos no build e existem apenas como visao
-          derivada da aplicacao.
+          {group.count} {group.count === 1 ? "registro" : "registros"}
+          {group.orphanWatchRecords > 0
+            ? ` / ${group.orphanWatchRecords} ${group.orphanWatchRecords === 1 ? "orfao recuperavel" : "orfaos recuperaveis"}`
+            : ""}
+        </p>
+      </header>
+
+      <ul className="year-record-list">
+        {group.records.map((record) => (<YearRecordCard key={record.id} record={record}/>))}
+      </ul>
+    </section>);
+}
+function YearRecordCard({ record }) {
+    const isOrphan = record.relationshipStatus === "orphan";
+    return (<li className={isOrphan ? "year-record year-record-orphan" : "year-record"}>
+      <strong className="year-record-unit">{record.unitLabel}</strong>
+
+      <div className="year-record-title">
+        <strong>{record.title}</strong>
+        <small>{record.id}</small>
+      </div>
+
+      <dl className="year-record-facts">
+        <RecordFact label="Ano" value={record.year}/>
+        <RecordFact label="Categoria" value={record.category ? formatMetricLabel(record.category) : "sem midia"}/>
+        <RecordFact label="Status pessoal" value={formatMetricLabel(record.watchStatus)}/>
+        {record.productionStatus ? (<RecordFact label="Producao" value={formatMetricLabel(record.productionStatus)}/>) : null}
+        {record.platform ? <RecordFact label="Plataforma" value={record.platform}/> : null}
+        {isOrphan ? <RecordFact label="Relacao" value="recuperavel"/> : null}
+      </dl>
+
+      {isOrphan ? (<p className="year-record-recovery">
+          Adicione um Media Item com id <code>{record.mediaId}</code> para
+          ligar este Watch Record sem alterar o JSON original.
+        </p>) : null}
+    </li>);
+}
+function RecordFact({ label, value }) {
+    return (<div>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>);
+}
+function findYearGroup(yearGroups, year) {
+    return yearGroups.find((group) => String(group.year) === String(year)) || null;
+}
+function YearEmptyState({ hasLibraryRecords, year }) {
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Ano vazio</span>
+        <h2>Nenhum registro em {year}</h2>
+        <p>
+          {hasLibraryRecords
+            ? "A biblioteca possui registros em outros anos, mas nenhum Watch Record foi encontrado para este recorte."
+            : "O snapshot atual ainda nao encontrou Watch Records em data/history."}
         </p>
       </div>
-      <dl className="source-ledger">
-        <div>
-          <dt>Categorias</dt>
-          <dd>{formatList(data.categories)}</dd>
-        </div>
-        <div>
-          <dt>Anos</dt>
-          <dd>{formatList(data.years)}</dd>
-        </div>
-        <div>
-          <dt>Relacoes</dt>
-          <dd>
-            {relationships.linkedWatchRecords} ligados /{" "}
-            {relationships.orphanWatchRecords} orfaos
-          </dd>
-        </div>
-        <div>
-          <dt>Labels derivados</dt>
-          <dd>{formatUnitLabels(data.normalized.watchRecords)}</dd>
-        </div>
-        <div>
-          <dt>Primeiro Media Item</dt>
-          <dd>{formatPath(data.mediaItems[0]?.origin.path)}</dd>
-        </div>
-        <div>
-          <dt>Primeiro Watch Record</dt>
-          <dd>{formatPath(data.watchRecords[0]?.origin.path)}</dd>
-        </div>
-      </dl>
+      <a className="inline-action" data-app-link href="/library">
+        Ver biblioteca completa
+      </a>
     </article>);
-}
-function NormalizationDashboard({ data }) {
-    const { metrics, orphanWatchRecords, watchRecords } = data.normalized;
-    const productionRecordCounts = new Map(metrics.linkedWatchRecordsByProductionStatus.map((item) => [
-        item.key,
-        item.count
-    ]));
-    return (<section className="normalization-board" aria-label="Resumo normalizado">
-      <MetricBreakdown title="Anos" items={metrics.byYear} getLabel={(item) => item.year} getValue={(item) => `${item.count} registros`}/>
-      <CategoryBreakdown items={metrics.byCategory}/>
-      <MetricBreakdown title="Status pessoal" items={metrics.byWatchStatus} getLabel={(item) => formatMetricLabel(item.key)} getValue={(item) => `${item.count} registros`}/>
-      <MetricBreakdown title="Status de producao" items={metrics.byProductionStatus} getLabel={(item) => formatMetricLabel(item.key)} getValue={(item) => `${item.count} midias`} getMeta={(item) => `${productionRecordCounts.get(item.key) || 0} registros ligados`}/>
-      <UnitPreview records={watchRecords}/>
-      <OrphanWatchRecords records={orphanWatchRecords}/>
-    </section>);
-}
-function MetricBreakdown({ getLabel, getMeta, getValue, items, title }) {
-    return (<section className="normalization-panel">
-      <span className="file-card-label">{title}</span>
-      {items.length > 0 ? (<ul className="normalization-list">
-          {items.map((item) => (<li key={String(getLabel(item))}>
-              <span>{getLabel(item)}</span>
-              <strong>{getValue(item)}</strong>
-              {getMeta ? <small>{getMeta(item)}</small> : null}
-            </li>))}
-        </ul>) : (<p className="normalization-empty">Nenhum dado derivado.</p>)}
-    </section>);
-}
-function CategoryBreakdown({ items }) {
-    return (<section className="normalization-panel">
-      <span className="file-card-label">Categorias</span>
-      {items.length > 0 ? (<ul className="normalization-list">
-          {items.map((item) => (<li key={item.category}>
-              <span>{formatMetricLabel(item.category)}</span>
-              <strong>{item.watchRecords} registros</strong>
-              <small>{item.mediaItems} midias</small>
-            </li>))}
-        </ul>) : (<p className="normalization-empty">Nenhum dado derivado.</p>)}
-    </section>);
-}
-function UnitPreview({ records }) {
-    const previewRecords = records.slice(0, 6);
-    return (<section className="normalization-panel normalization-panel-wide">
-      <span className="file-card-label">Unidades</span>
-      {previewRecords.length > 0 ? (<ul className="unit-record-list">
-          {previewRecords.map((record) => (<li key={record.id}>
-              <strong>{record.unitLabel}</strong>
-              <span>{record.title}</span>
-              <small>
-                {record.year} / {formatMetricLabel(record.watchStatus)}
-              </small>
-            </li>))}
-        </ul>) : (<p className="normalization-empty">Nenhum label derivado.</p>)}
-    </section>);
-}
-function OrphanWatchRecords({ records }) {
-    return (<section className="normalization-panel normalization-panel-wide">
-      <span className="file-card-label">Orfaos</span>
-      {records.length > 0 ? (<ul className="orphan-record-list">
-          {records.map((record) => (<li key={record.id}>
-              <div>
-                <strong>{record.id}</strong>
-                <span>media_id: {record.mediaId}</span>
-              </div>
-              <code>{record.origin.path}</code>
-            </li>))}
-        </ul>) : (<p className="normalization-empty">Nenhum Watch Record orfao no snapshot atual.</p>)}
-    </section>);
 }
 function LoaderErrorState({ data }) {
     return (<article className="loader-state loader-state-error" role="alert">
@@ -324,30 +310,21 @@ function LoaderErrorState({ data }) {
       </ul>
     </article>);
 }
-function LoaderEmptyState() {
+function LibraryEmptyState() {
     return (<article className="loader-state loader-state-empty" role="status">
       <div>
-        <span className="file-card-label">Loader</span>
-        <h2>Nenhum JSON carregado</h2>
+        <span className="file-card-label">Biblioteca vazia</span>
+        <h2>Nenhum registro carregado</h2>
         <p>
-          O snapshot atual nao encontrou arquivos em <code>data/media</code> ou{" "}
-          <code>data/history</code>.
+          O snapshot atual ainda nao encontrou Watch Records em{" "}
+          <code>data/history</code>. Media Items podem existir, mas a
+          biblioteca por ano nasce dos registros de consumo.
         </p>
       </div>
     </article>);
 }
-function formatList(values) {
-    return values.length > 0 ? values.join(", ") : "nenhum";
-}
 function formatMetricLabel(value) {
     return String(value).replace(/[_-]/g, " ");
-}
-function formatPath(value) {
-    return value || "nenhum arquivo";
-}
-function formatUnitLabels(records) {
-    const labels = Array.from(new Set(records.map((record) => record.unitLabel)));
-    return labels.length > 0 ? labels.join(", ") : "nenhum";
 }
 function RouteWorkspace({ label, path, value }) {
     return (<div className="route-board">

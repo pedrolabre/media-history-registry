@@ -497,6 +497,187 @@ p {
   background: var(--color-lilac);
 }
 
+.year-library {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.year-library-intro,
+.year-group {
+  min-width: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.year-library-intro {
+  padding: var(--space-4);
+  background: var(--color-mint);
+}
+
+.year-library-intro p {
+  max-width: 74ch;
+  margin-bottom: 0;
+  color: var(--color-ink);
+  font-weight: 750;
+}
+
+.year-group {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-sky);
+}
+
+.year-group:nth-child(odd) {
+  background: var(--color-lilac);
+}
+
+.year-group-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.year-group-header h2 {
+  margin-bottom: 0;
+  font-size: 2.1rem;
+}
+
+.year-group-header p {
+  max-width: 34ch;
+  margin-bottom: 0;
+  color: var(--color-ink);
+  font-weight: 900;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.year-record-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.year-record {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(56px, auto) minmax(170px, 0.72fr) minmax(0, 1.6fr);
+  gap: var(--space-3);
+  align-items: center;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: var(--color-board);
+  box-shadow: 3px 3px 0 var(--color-shadow);
+}
+
+.year-record:nth-child(even) {
+  background: #fff7d6;
+}
+
+.year-record-orphan {
+  background: #fff1eb;
+}
+
+.year-record-unit {
+  justify-self: start;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 7px 9px;
+  background: var(--color-dark);
+  color: var(--color-board);
+  font-family: var(--font-display);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.year-record-title {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.year-record-title strong {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.year-record-title small {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.year-record-facts {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.year-record-facts div {
+  min-width: 104px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 8px;
+  background: var(--color-mint);
+}
+
+.year-record-facts div:nth-child(2n) {
+  background: var(--color-pink);
+}
+
+.year-record-facts dt {
+  font-size: 0.66rem;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.year-record-facts dd {
+  margin: 3px 0 0;
+  color: var(--color-ink);
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.year-record-recovery {
+  grid-column: 1 / -1;
+  margin: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: var(--color-coral);
+  color: var(--color-ink);
+  font-weight: 850;
+}
+
+.inline-action {
+  justify-self: start;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  background: var(--color-board);
+  box-shadow: var(--shadow-soft);
+  color: var(--color-ink);
+  font-weight: 950;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
 .source-ledger {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1154,13 +1335,23 @@ p {
 
   .normalization-list li,
   .unit-record-list li,
-  .orphan-record-list li {
+  .orphan-record-list li,
+  .year-record {
     grid-template-columns: 1fr;
   }
 
   .unit-record-list small,
   .orphan-record-list code {
     justify-self: start;
+  }
+
+  .year-group-header {
+    display: grid;
+  }
+
+  .year-group-header p {
+    max-width: none;
+    text-align: left;
   }
 
   .form-grid {

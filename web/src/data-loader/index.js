@@ -82,6 +82,7 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
             category: mediaItem?.category || null,
             watchStatus: watchRecord.watch_status,
             productionStatus: mediaItem?.productionStatus || null,
+            platform: normalizeOptionalText(watchRecord.platform),
             unitLabel: deriveUnitLabel(watchRecord.unit),
             relationshipStatus: mediaItem ? "linked" : "orphan",
             media: mediaItem ? summarizeMediaItem(mediaItem) : null,
@@ -108,10 +109,12 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
     const orphanWatchRecords = normalizedWatchRecords.filter(
         (record) => record.relationshipStatus === "orphan"
     );
+    const yearGroups = buildYearGroups(normalizedWatchRecords);
 
     return {
         mediaItems: normalizedMediaItems,
         watchRecords: normalizedWatchRecords,
+        yearGroups,
         linkedWatchRecords,
         orphanWatchRecords,
         relationships: {
@@ -156,6 +159,40 @@ export function deriveUnitLabel(unit) {
         default:
             return "UN";
     }
+}
+
+function buildYearGroups(watchRecords) {
+    const groupsByYear = new Map();
+
+    for (const record of watchRecords) {
+        const year = record.year;
+
+        if (!groupsByYear.has(year)) {
+            groupsByYear.set(year, {
+                year,
+                records: [],
+                linkedWatchRecords: 0,
+                orphanWatchRecords: 0
+            });
+        }
+
+        const group = groupsByYear.get(year);
+        group.records.push(record);
+
+        if (record.relationshipStatus === "orphan") {
+            group.orphanWatchRecords += 1;
+        } else {
+            group.linkedWatchRecords += 1;
+        }
+    }
+
+    return Array.from(groupsByYear.values())
+        .map((group) => ({
+            ...group,
+            count: group.records.length,
+            records: group.records.sort(sortNormalizedWatchRecords)
+        }))
+        .sort((left, right) => sortYearsDescending(left.year, right.year));
 }
 
 function buildNormalizedMetrics({ mediaItems, watchRecords, linkedWatchRecords, orphanWatchRecords }) {
@@ -257,6 +294,10 @@ function sortNormalizedWatchRecords(left, right) {
 
 function normalizeMetricKey(value) {
     return value === null || value === undefined || value === "" ? "unknown" : value;
+}
+
+function normalizeOptionalText(value) {
+    return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function padUnitNumber(value) {
