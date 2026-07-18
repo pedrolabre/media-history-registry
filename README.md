@@ -209,13 +209,15 @@ media-history-registry/
         |   |-- FileInfo.jsx
         |   |-- JsonOutputBlock.jsx
         |   |-- JsonPreview.jsx
-        |   `-- MediaItemGenerator.jsx
+        |   |-- MediaItemGenerator.jsx
+        |   `-- WatchRecordGenerator.jsx
         |-- main.jsx
         |-- styles.css
         `-- utils/
             |-- jsonGeneration.js
             |-- mediaItemGenerator.js
-            `-- slugify.js
+            |-- slugify.js
+            `-- watchRecordGenerator.js
 ```
 
 > A estrutura vai crescer junto com o codigo. Tudo que for adicionado deve

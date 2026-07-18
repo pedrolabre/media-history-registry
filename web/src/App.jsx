@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { JsonOutputBlock } from "./components/JsonOutputBlock";
 import { MediaItemGenerator } from "./components/MediaItemGenerator";
-import { createWatchRecordFileDescriptor, createWatchRecordId } from "./utils/jsonGeneration";
-import { slugify } from "./utils/slugify";
+import { WatchRecordGenerator } from "./components/WatchRecordGenerator";
 const navItems = [
     { href: "/", label: "Biblioteca", note: "views" },
     { href: "/generate/media", label: "Midia", note: "media item" },
@@ -13,32 +11,6 @@ const routeExamples = [
     { href: "/library/media/spy-family", label: "Midia", value: "spy-family" },
     { href: "/library/category/anime", label: "Categoria", value: "anime" }
 ];
-const demoMediaId = slugify("Spy Family");
-const demoWatchUnit = {
-    type: "season",
-    season_number: 2
-};
-const demoWatchFileInput = {
-    mediaId: demoMediaId,
-    year: 2026,
-    unit: demoWatchUnit,
-    rewatch: false
-};
-const demoWatchRecord = {
-    id: createWatchRecordId(demoWatchFileInput),
-    media_id: demoMediaId,
-    year: demoWatchFileInput.year,
-    unit: demoWatchUnit,
-    watch_status: "completed",
-    started_at: null,
-    finished_at: null,
-    platform: "Crunchyroll",
-    rewatch: false,
-    rating: null,
-    favorite: false,
-    notes: null
-};
-const demoWatchFile = createWatchRecordFileDescriptor(demoWatchFileInput);
 function App() {
     const [pathname, setPathname] = useState(() => window.location.pathname);
     const route = useMemo(() => resolveRoute(pathname), [pathname]);
@@ -152,7 +124,7 @@ function resolveRoute(pathname) {
             eyebrow: "Watch Record",
             title: "Novo registro",
             description: "Registre o consumo de uma temporada, filme, especial, arco ou obra completa.",
-            content: (<GeneratorWorkspace entity="Watch Record" file={demoWatchFile} path="data/history/{year}/{slug}.json" fields={["media_id", "year", "unit", "watch_status"]} outputDescription="Exemplo estatico para exercitar a regra de filename por unidade assistida." outputTitle="Preview de Watch Record" value={demoWatchRecord}/>)
+            content: <WatchRecordGenerator />
         };
     }
     const yearMatch = /^\/library\/year\/([^/]+)$/.exec(pathname);
@@ -212,26 +184,6 @@ function LibraryWorkspace() {
         <h2>Library View</h2>
         <p>O que a interface deriva: ano, midia, categoria, filtros e rotulos visuais.</p>
       </article>
-    </div>);
-}
-function GeneratorWorkspace({ entity, file, fields, outputDescription, outputTitle, path, value }) {
-    return (<div className="generator-board">
-      <div className="file-card">
-        <span className="file-card-label">Entidade</span>
-        <strong>{entity}</strong>
-      </div>
-      <div className="file-card file-card-wide">
-        <span className="file-card-label">Destino</span>
-        <code className="path-chip">{path}</code>
-      </div>
-      <div className="field-rack">
-        {fields.map((field) => (<span key={field}>{field}</span>))}
-      </div>
-      <p className="manual-note">
-        A demonstracao usa dados estaticos para testar a saida JSON. O formulario real
-        entra nos proximos blocos, e salvar ou commitar continua manual.
-      </p>
-      <JsonOutputBlock description={outputDescription} file={file} title={outputTitle} value={value}/>
     </div>);
 }
 function RouteWorkspace({ label, path, value }) {
