@@ -167,6 +167,7 @@ Estrutura publica atual:
 
 ```text
 media-history-registry/
+|-- .gitignore
 |-- README.md
 |-- data/
 |   |-- history/
@@ -192,9 +193,17 @@ media-history-registry/
 |-- schemas/
 |   |-- media.schema.json
 |   `-- watch-record.schema.json
-`-- scripts/
-    |-- slugify.js
-    `-- validate.js
+|-- scripts/
+|   |-- slugify.js
+|   `-- validate.js
+`-- web/
+    |-- index.html
+    |-- package.json
+    |-- vite.config.js
+    `-- src/
+        |-- App.jsx
+        |-- main.jsx
+        `-- styles.css
 ```
 
 > A estrutura vai crescer junto com o codigo. Tudo que for adicionado deve
@@ -227,5 +236,5 @@ Actions.
 | **Rotulos derivados** | `S01`, `LS`, `MOV` e similares pertencem a UI, nao aos dados primarios |
 | **Status separado** | `cancelled` da obra nao e igual a `dropped` do usuario |
 | **Commit manual** | O usuario mantem controle total sobre o repositorio |
-| **React + Vite + TypeScript** | Boa base para formularios, validacao, biblioteca visual e build estatico |
+| **React + Vite + JavaScript** | Boa base para formularios, validacao, biblioteca visual e build estatico |
 | **Sem API externa obrigatoria** | O dado continua util mesmo se qualquer servico externo desaparecer |
