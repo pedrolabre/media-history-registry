@@ -56,10 +56,15 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
             const mediaItem = {
                 id: entry.value.id,
                 title: entry.value.title,
+                originalTitle: normalizeOptionalText(entry.value.original_title),
                 category: entry.value.category,
+                subcategories: normalizeStringArray(entry.value.subcategories),
+                format: entry.value.format,
                 productionStatus: entry.value.status,
+                firstReleaseYear: normalizeOptionalYear(entry.value.first_release_year),
                 origin: entry.origin,
                 value: entry.value,
+                recordCount: 0,
                 watchRecords: []
             };
 
@@ -101,6 +106,7 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
 
     for (const mediaItem of normalizedMediaItems) {
         mediaItem.watchRecords.sort(sortNormalizedWatchRecords);
+        mediaItem.recordCount = mediaItem.watchRecords.length;
     }
 
     const linkedWatchRecords = normalizedWatchRecords.filter(
@@ -110,11 +116,13 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
         (record) => record.relationshipStatus === "orphan"
     );
     const yearGroups = buildYearGroups(normalizedWatchRecords);
+    const categoryGroups = buildCategoryGroups(normalizedMediaItems);
 
     return {
         mediaItems: normalizedMediaItems,
         watchRecords: normalizedWatchRecords,
         yearGroups,
+        categoryGroups,
         linkedWatchRecords,
         orphanWatchRecords,
         relationships: {
@@ -159,6 +167,43 @@ export function deriveUnitLabel(unit) {
         default:
             return "UN";
     }
+}
+
+function buildCategoryGroups(mediaItems) {
+    const groupsByCategory = new Map();
+
+    for (const mediaItem of mediaItems) {
+        const category = normalizeMetricKey(mediaItem.category);
+
+        if (!groupsByCategory.has(category)) {
+            groupsByCategory.set(category, {
+                category,
+                mediaItems: [],
+                watchRecords: []
+            });
+        }
+
+        const group = groupsByCategory.get(category);
+        group.mediaItems.push(mediaItem);
+        group.watchRecords.push(...mediaItem.watchRecords);
+    }
+
+    return Array.from(groupsByCategory.values())
+        .map((group) => {
+            const mediaItems = group.mediaItems.sort(sortNormalizedMediaItems);
+            const watchRecords = group.watchRecords.sort(sortNormalizedWatchRecords);
+
+            return {
+                ...group,
+                mediaItems,
+                watchRecords,
+                mediaItemCount: mediaItems.length,
+                watchRecordCount: watchRecords.length,
+                mediaItemsWithRecords: mediaItems.filter((mediaItem) => mediaItem.recordCount > 0).length,
+                mediaItemsWithoutRecords: mediaItems.filter((mediaItem) => mediaItem.recordCount === 0).length
+            };
+        })
+        .sort((left, right) => left.category.localeCompare(right.category));
 }
 
 function buildYearGroups(watchRecords) {
@@ -270,8 +315,12 @@ function summarizeMediaItem(mediaItem) {
     return {
         id: mediaItem.id,
         title: mediaItem.title,
+        originalTitle: mediaItem.originalTitle,
         category: mediaItem.category,
+        subcategories: mediaItem.subcategories,
+        format: mediaItem.format,
         status: mediaItem.productionStatus,
+        firstReleaseYear: mediaItem.firstReleaseYear,
         origin: mediaItem.origin
     };
 }
@@ -298,6 +347,20 @@ function normalizeMetricKey(value) {
 
 function normalizeOptionalText(value) {
     return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function normalizeOptionalYear(value) {
+    return Number.isInteger(value) ? value : null;
+}
+
+function normalizeStringArray(value) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value
+        .filter((item) => typeof item === "string" && item.trim())
+        .map((item) => item.trim());
 }
 
 function padUnitNumber(value) {

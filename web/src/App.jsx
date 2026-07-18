@@ -130,7 +130,7 @@ function resolveRoute(pathname) {
     }
     const yearMatch = /^\/library\/year\/([^/]+)$/.exec(pathname);
     if (yearMatch) {
-        const year = decodeURIComponent(yearMatch[1]);
+        const year = decodeRouteValue(yearMatch[1]);
         return {
             eyebrow: "Ano",
             title: `Ano ${year}`,
@@ -140,20 +140,22 @@ function resolveRoute(pathname) {
     }
     const mediaMatch = /^\/library\/media\/([^/]+)$/.exec(pathname);
     if (mediaMatch) {
+        const mediaId = decodeRouteValue(mediaMatch[1]);
         return {
             eyebrow: "Midia",
             title: "Historico da obra",
-            description: "Uma gaveta pronta para reunir todos os registros ligados a uma obra.",
-            content: <RouteWorkspace label="Media ID" path="data/media/{category}" value={mediaMatch[1]}/>
+            description: "Uma gaveta para reunir a obra selecionada e todos os registros ligados a ela.",
+            content: <MediaLibraryWorkspace data={staticLibraryData} mediaId={mediaId}/>
         };
     }
     const categoryMatch = /^\/library\/category\/([^/]+)$/.exec(pathname);
     if (categoryMatch) {
+        const category = decodeRouteValue(categoryMatch[1]);
         return {
             eyebrow: "Categoria",
             title: "Categoria",
-            description: "Uma gaveta pronta para navegar obras por familia audiovisual.",
-            content: (<RouteWorkspace label="Categoria" path="data/media/{category}" value={categoryMatch[1]}/>)
+            description: "Uma gaveta para navegar as obras de uma categoria e seus registros ligados.",
+            content: <CategoryLibraryWorkspace category={category} data={staticLibraryData}/>
         };
     }
     return {
@@ -191,6 +193,178 @@ function YearLibraryWorkspace({ data, year }) {
 
       {yearGroup ? (<YearLibrary isSingleYear yearGroups={[yearGroup]}/>) : (<YearEmptyState hasLibraryRecords={data.normalized.watchRecords.length > 0} year={year}/>)}
     </div>);
+}
+function MediaLibraryWorkspace({ data, mediaId }) {
+    const mediaItem = findMediaItem(data.normalized.mediaItems, mediaId);
+    return (<div className="library-loader">
+      <LibrarySummary data={data}/>
+
+      {data.status === "error" ? <LoaderErrorState data={data}/> : null}
+
+      {mediaItem ? <MediaDetail mediaItem={mediaItem}/> : <MediaNotFoundState mediaId={mediaId}/>}
+    </div>);
+}
+function CategoryLibraryWorkspace({ category, data }) {
+    const categoryGroup = findCategoryGroup(data.normalized.categoryGroups, category);
+    return (<div className="library-loader">
+      <LibrarySummary data={data}/>
+
+      {data.status === "error" ? <LoaderErrorState data={data}/> : null}
+
+      {categoryGroup ? (<CategoryDetail categoryGroup={categoryGroup}/>) : (<CategoryNoMediaState category={category}/>)}
+    </div>);
+}
+function MediaDetail({ mediaItem }) {
+    return (<section className="media-library" aria-labelledby={`media-${mediaItem.id}`}>
+      <MediaProfile mediaItem={mediaItem}/>
+
+      {mediaItem.watchRecords.length > 0 ? (<LinkedRecordCollection records={mediaItem.watchRecords} title="Watch Records ligados"/>) : (<MediaNoRecordsState mediaItem={mediaItem}/>)}
+    </section>);
+}
+function CategoryDetail({ categoryGroup }) {
+    const hasLinkedRecords = categoryGroup.watchRecordCount > 0;
+    return (<section className="category-library" aria-labelledby={`category-${categoryGroup.category}`}>
+      <header className="category-header">
+        <div>
+          <span className="file-card-label">Categoria</span>
+          <h2 id={`category-${categoryGroup.category}`}>{formatMetricLabel(categoryGroup.category)}</h2>
+        </div>
+        <p>
+          {categoryGroup.mediaItemCount} {categoryGroup.mediaItemCount === 1 ? "midia" : "midias"} /{" "}
+          {categoryGroup.watchRecordCount}{" "}
+          {categoryGroup.watchRecordCount === 1 ? "registro ligado" : "registros ligados"}
+        </p>
+      </header>
+
+      {!hasLinkedRecords ? <CategoryNoRecordsState categoryGroup={categoryGroup}/> : null}
+
+      <div className="category-media-list">
+        {categoryGroup.mediaItems.map((mediaItem) => (<CategoryMediaCard key={mediaItem.id} mediaItem={mediaItem}/>))}
+      </div>
+    </section>);
+}
+function MediaProfile({ mediaItem }) {
+    return (<article className="media-profile">
+      <header className="media-profile-heading">
+        <div>
+          <span className="file-card-label">Media Item</span>
+          <h2 id={`media-${mediaItem.id}`}>{mediaItem.title}</h2>
+          {mediaItem.originalTitle ? <p>{mediaItem.originalTitle}</p> : null}
+        </div>
+        <strong>{mediaItem.recordCount}</strong>
+      </header>
+
+      <MediaFacts mediaItem={mediaItem}/>
+    </article>);
+}
+function CategoryMediaCard({ mediaItem }) {
+    return (<article className="category-media-card">
+      <header className="category-media-heading">
+        <div>
+          <span className="file-card-label">Obra</span>
+          <h3>{mediaItem.title}</h3>
+          {mediaItem.originalTitle ? <p>{mediaItem.originalTitle}</p> : null}
+        </div>
+        <strong>
+          {mediaItem.recordCount} {mediaItem.recordCount === 1 ? "registro" : "registros"}
+        </strong>
+      </header>
+
+      <MediaFacts mediaItem={mediaItem}/>
+
+      {mediaItem.watchRecords.length > 0 ? (<LinkedRecordCollection compact records={mediaItem.watchRecords} title="Registros da obra"/>) : (<MediaNoRecordsState compact mediaItem={mediaItem}/>)}
+    </article>);
+}
+function MediaFacts({ mediaItem }) {
+    const subcategories =
+        mediaItem.subcategories.length > 0
+            ? mediaItem.subcategories.map(formatMetricLabel).join(", ")
+            : "sem subcategorias";
+    return (<dl className="media-fact-grid">
+      <RecordFact label="Categoria" value={formatMetricLabel(mediaItem.category)}/>
+      <RecordFact label="Subcategorias" value={subcategories}/>
+      <RecordFact label="Formato" value={formatMetricLabel(mediaItem.format)}/>
+      <RecordFact label="Producao" value={formatMetricLabel(mediaItem.productionStatus)}/>
+      <RecordFact label="Primeiro lancamento" value={mediaItem.firstReleaseYear || "nao informado"}/>
+      <RecordFact label="Registros" value={mediaItem.recordCount}/>
+    </dl>);
+}
+function LinkedRecordCollection({ compact = false, records, title }) {
+    return (<section className={compact ? "linked-records linked-records-compact" : "linked-records"} aria-label={title}>
+      <header className="linked-records-header">
+        <span className="file-card-label">{title}</span>
+        <p>
+          {records.length} {records.length === 1 ? "registro" : "registros"}
+        </p>
+      </header>
+
+      <ul className="year-record-list">
+        {records.map((record) => (<YearRecordCard key={record.id} record={record}/>))}
+      </ul>
+    </section>);
+}
+function MediaNotFoundState({ mediaId }) {
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Midia inexistente</span>
+        <h2>Nenhuma obra encontrada</h2>
+        <p>
+          Nao existe Media Item com id <code>{mediaId}</code> no snapshot atual
+          de <code>data/media</code>.
+        </p>
+      </div>
+      <a className="inline-action" data-app-link href="/library">
+        Ver biblioteca completa
+      </a>
+    </article>);
+}
+function MediaNoRecordsState({ compact = false, mediaItem }) {
+    if (compact) {
+        return (<p className="compact-empty-state" role="status">
+          <strong>Sem Watch Records ligados.</strong> Nenhum registro referencia{" "}
+          <code>{mediaItem.id}</code> neste snapshot.
+        </p>);
+    }
+
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Midia sem registros</span>
+        <h2>Nenhum Watch Record ligado</h2>
+        <p>
+          {mediaItem.title} existe como Media Item, mas nenhum Watch Record
+          referencia <code>{mediaItem.id}</code> neste snapshot.
+        </p>
+      </div>
+    </article>);
+}
+function CategoryNoMediaState({ category }) {
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Categoria sem midias</span>
+        <h2>Nenhuma midia em {formatMetricLabel(category)}</h2>
+        <p>
+          O snapshot atual nao encontrou Media Items em{" "}
+          <code>data/media/{category}</code>.
+        </p>
+      </div>
+      <a className="inline-action" data-app-link href="/library">
+        Ver biblioteca completa
+      </a>
+    </article>);
+}
+function CategoryNoRecordsState({ categoryGroup }) {
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Categoria sem registros</span>
+        <h2>Nenhum Watch Record ligado</h2>
+        <p>
+          A categoria {formatMetricLabel(categoryGroup.category)} possui{" "}
+          {categoryGroup.mediaItemCount}{" "}
+          {categoryGroup.mediaItemCount === 1 ? "Media Item" : "Media Items"},
+          mas ainda nao possui Watch Records ligados.
+        </p>
+      </div>
+    </article>);
 }
 function MetricCard({ detail, label, value }) {
     return (<article className="library-metric">
@@ -275,6 +449,19 @@ function RecordFact({ label, value }) {
 }
 function findYearGroup(yearGroups, year) {
     return yearGroups.find((group) => String(group.year) === String(year)) || null;
+}
+function findMediaItem(mediaItems, mediaId) {
+    return mediaItems.find((mediaItem) => mediaItem.id === mediaId) || null;
+}
+function findCategoryGroup(categoryGroups, category) {
+    return categoryGroups.find((group) => group.category === category) || null;
+}
+function decodeRouteValue(value) {
+    try {
+        return decodeURIComponent(value);
+    } catch {
+        return value;
+    }
 }
 function YearEmptyState({ hasLibraryRecords, year }) {
     return (<article className="loader-state loader-state-empty" role="status">
