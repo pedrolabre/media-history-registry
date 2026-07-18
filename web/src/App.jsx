@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { JsonOutputBlock } from "./components/JsonOutputBlock";
-import { createMediaItemFileDescriptor, createWatchRecordFileDescriptor, createWatchRecordId } from "./utils/jsonGeneration";
+import { MediaItemGenerator } from "./components/MediaItemGenerator";
+import { createWatchRecordFileDescriptor, createWatchRecordId } from "./utils/jsonGeneration";
 import { slugify } from "./utils/slugify";
 const navItems = [
     { href: "/", label: "Biblioteca", note: "views" },
@@ -13,32 +14,6 @@ const routeExamples = [
     { href: "/library/category/anime", label: "Categoria", value: "anime" }
 ];
 const demoMediaId = slugify("Spy Family");
-const demoMediaItem = {
-    id: demoMediaId,
-    title: "Spy Family",
-    original_title: null,
-    category: "anime",
-    subcategories: [],
-    format: "series",
-    status: "ongoing",
-    genres: ["action", "comedy"],
-    countries: ["JP"],
-    studios: ["Wit Studio", "CloverWorks"],
-    directors: [],
-    first_release_year: 2022,
-    external_ids: {
-        imdb: null,
-        tmdb: null,
-        anilist: null,
-        myanimelist: null
-    },
-    poster: null,
-    notes: null
-};
-const demoMediaFile = createMediaItemFileDescriptor({
-    category: String(demoMediaItem.category),
-    id: demoMediaId
-});
 const demoWatchUnit = {
     type: "season",
     season_number: 2
@@ -169,7 +144,7 @@ function resolveRoute(pathname) {
             eyebrow: "Media Item",
             title: "Nova midia",
             description: "Defina a obra uma vez para que varios eventos de consumo possam referencia-la depois.",
-            content: (<GeneratorWorkspace entity="Media Item" file={demoMediaFile} path="data/media/{category}/{slug}.json" fields={["title", "category", "format", "status"]} outputDescription="Exemplo estatico para testar nome, caminho, preview, copia e download antes do formulario real." outputTitle="Preview de Media Item" value={demoMediaItem}/>)
+            content: <MediaItemGenerator />
         };
     }
     if (pathname === "/generate/watch-record") {

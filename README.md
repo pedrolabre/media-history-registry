@@ -207,11 +207,13 @@ media-history-registry/
         |   |-- DownloadButton.jsx
         |   |-- FileInfo.jsx
         |   |-- JsonOutputBlock.jsx
-        |   `-- JsonPreview.jsx
+        |   |-- JsonPreview.jsx
+        |   `-- MediaItemGenerator.jsx
         |-- main.jsx
         |-- styles.css
         `-- utils/
             |-- jsonGeneration.js
+            |-- mediaItemGenerator.js
             `-- slugify.js
 ```
 
