@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { MediaItemGenerator } from "./components/MediaItemGenerator";
 import { WatchRecordGenerator } from "./components/WatchRecordGenerator";
-import { staticLibraryData } from "./data-loader";
+import {
+    DEFAULT_LIBRARY_SORT,
+    LIBRARY_SORT_DIRECTIONS,
+    LIBRARY_SORT_FIELDS,
+    applyLibraryFiltersAndSorting,
+    buildYearGroups,
+    createEmptyLibraryFilters,
+    getDefaultLibrarySortDirection,
+    groupRecordsByMediaId,
+    staticLibraryData
+} from "./data-loader";
 const navItems = [
     { href: "/", label: "Biblioteca", note: "views" },
     { href: "/generate/media", label: "Midia", note: "media item" },
@@ -11,6 +21,15 @@ const routeExamples = [
     { href: "/library/year/2026", label: "Ano", value: "2026" },
     { href: "/library/media/spy-family", label: "Midia", value: "spy-family" },
     { href: "/library/category/anime", label: "Categoria", value: "anime" }
+];
+const libraryFilterControls = [
+    { key: "category", label: "Categoria", optionsKey: "categories", emptyLabel: "Todas" },
+    { key: "subcategory", label: "Subcategoria", optionsKey: "subcategories", emptyLabel: "Todas" },
+    { key: "genre", label: "Genero", optionsKey: "genres", emptyLabel: "Todos" },
+    { key: "watchStatus", label: "Status pessoal", optionsKey: "watchStatuses", emptyLabel: "Todos" },
+    { key: "productionStatus", label: "Status producao", optionsKey: "productionStatuses", emptyLabel: "Todos" },
+    { key: "platform", label: "Plataforma", optionsKey: "platforms", emptyLabel: "Todas" },
+    { key: "year", label: "Ano", optionsKey: "years", emptyLabel: "Todos" }
 ];
 function App() {
     const [pathname, setPathname] = useState(() => window.location.pathname);
@@ -171,9 +190,51 @@ function isActive(pathname, href) {
     }
     return pathname === href;
 }
+function useLibraryExplorer(records) {
+    const [filters, setFilters] = useState(() => createEmptyLibraryFilters());
+    const [sort, setSort] = useState(() => ({ ...DEFAULT_LIBRARY_SORT }));
+    const result = useMemo(() => applyLibraryFiltersAndSorting(records, filters, sort), [records, filters, sort]);
+
+    function updateFilter(key, value) {
+        setFilters((currentFilters) => ({
+            ...currentFilters,
+            [key]: value
+        }));
+    }
+
+    function updateSortField(field) {
+        setSort({
+            field,
+            direction: getDefaultLibrarySortDirection(field)
+        });
+    }
+
+    function updateSortDirection(direction) {
+        setSort((currentSort) => ({
+            ...currentSort,
+            direction
+        }));
+    }
+
+    function clearFilters() {
+        setFilters(createEmptyLibraryFilters());
+    }
+
+    return {
+        ...result,
+        updateFilter,
+        updateSortField,
+        updateSortDirection,
+        clearFilters
+    };
+}
 function LibraryWorkspace({ data }) {
-    const yearGroups = data.normalized.yearGroups;
-    const isEmpty = yearGroups.length === 0;
+    const explorer = useLibraryExplorer(data.normalized.watchRecords);
+    const yearGroups = buildYearGroups(explorer.records, {
+        preserveRecordOrder: true,
+        yearDirection: explorer.sort.field === "year" ? explorer.sort.direction : "desc"
+    });
+    const isEmpty = data.normalized.watchRecords.length === 0;
     return (<div className="library-loader">
       <LibrarySummary data={data}/>
 
@@ -181,48 +242,76 @@ function LibraryWorkspace({ data }) {
 
       {isEmpty ? <LibraryEmptyState /> : null}
 
-      {!isEmpty ? <YearLibrary yearGroups={yearGroups}/> : null}
+      {!isEmpty ? <LibraryControls explorer={explorer}/> : null}
+
+      {!isEmpty && explorer.filteredCount === 0 ? <FilterNoResultsState explorer={explorer}/> : null}
+
+      {!isEmpty && explorer.filteredCount > 0 ? <YearLibrary yearGroups={yearGroups}/> : null}
     </div>);
 }
 function YearLibraryWorkspace({ data, year }) {
     const yearGroup = findYearGroup(data.normalized.yearGroups, year);
+    const explorer = useLibraryExplorer(yearGroup?.records || []);
+    const yearGroups = buildYearGroups(explorer.records, {
+        preserveRecordOrder: true,
+        yearDirection: explorer.sort.field === "year" ? explorer.sort.direction : "desc"
+    });
     return (<div className="library-loader">
       <LibrarySummary data={data}/>
 
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
-      {yearGroup ? (<YearLibrary isSingleYear yearGroups={[yearGroup]}/>) : (<YearEmptyState hasLibraryRecords={data.normalized.watchRecords.length > 0} year={year}/>)}
+      {yearGroup ? <LibraryControls explorer={explorer}/> : null}
+
+      {yearGroup && explorer.filteredCount === 0 ? <FilterNoResultsState explorer={explorer}/> : null}
+
+      {yearGroup && explorer.filteredCount > 0 ? (<YearLibrary isSingleYear yearGroups={yearGroups}/>) : null}
+
+      {!yearGroup ? (<YearEmptyState hasLibraryRecords={data.normalized.watchRecords.length > 0} year={year}/>) : null}
     </div>);
 }
 function MediaLibraryWorkspace({ data, mediaId }) {
     const mediaItem = findMediaItem(data.normalized.mediaItems, mediaId);
+    const explorer = useLibraryExplorer(mediaItem?.watchRecords || []);
     return (<div className="library-loader">
       <LibrarySummary data={data}/>
 
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
-      {mediaItem ? <MediaDetail mediaItem={mediaItem}/> : <MediaNotFoundState mediaId={mediaId}/>}
+      {mediaItem ? <MediaDetail explorer={explorer} mediaItem={mediaItem}/> : <MediaNotFoundState mediaId={mediaId}/>}
     </div>);
 }
 function CategoryLibraryWorkspace({ category, data }) {
     const categoryGroup = findCategoryGroup(data.normalized.categoryGroups, category);
+    const explorer = useLibraryExplorer(categoryGroup?.watchRecords || []);
     return (<div className="library-loader">
       <LibrarySummary data={data}/>
 
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
-      {categoryGroup ? (<CategoryDetail categoryGroup={categoryGroup}/>) : (<CategoryNoMediaState category={category}/>)}
+      {categoryGroup ? (<CategoryDetail categoryGroup={categoryGroup} explorer={explorer}/>) : (<CategoryNoMediaState category={category}/>)}
     </div>);
 }
-function MediaDetail({ mediaItem }) {
+function MediaDetail({ explorer, mediaItem }) {
+    const hasRecords = mediaItem.watchRecords.length > 0;
     return (<section className="media-library" aria-labelledby={`media-${mediaItem.id}`}>
       <MediaProfile mediaItem={mediaItem}/>
 
-      {mediaItem.watchRecords.length > 0 ? (<LinkedRecordCollection records={mediaItem.watchRecords} title="Watch Records ligados"/>) : (<MediaNoRecordsState mediaItem={mediaItem}/>)}
+      {hasRecords ? <LibraryControls explorer={explorer}/> : null}
+
+      {hasRecords && explorer.filteredCount === 0 ? <FilterNoResultsState explorer={explorer}/> : null}
+
+      {hasRecords && explorer.filteredCount > 0 ? (<LinkedRecordCollection records={explorer.records} title="Watch Records ligados"/>) : null}
+
+      {!hasRecords ? <MediaNoRecordsState mediaItem={mediaItem}/> : null}
     </section>);
 }
-function CategoryDetail({ categoryGroup }) {
+function CategoryDetail({ categoryGroup, explorer }) {
     const hasLinkedRecords = categoryGroup.watchRecordCount > 0;
+    const recordsByMediaId = groupRecordsByMediaId(explorer.records);
+    const visibleMediaItems = explorer.hasActiveFilters
+        ? categoryGroup.mediaItems.filter((mediaItem) => recordsByMediaId.has(mediaItem.id))
+        : categoryGroup.mediaItems;
     return (<section className="category-library" aria-labelledby={`category-${categoryGroup.category}`}>
       <header className="category-header">
         <div>
@@ -238,8 +327,12 @@ function CategoryDetail({ categoryGroup }) {
 
       {!hasLinkedRecords ? <CategoryNoRecordsState categoryGroup={categoryGroup}/> : null}
 
+      {hasLinkedRecords ? <LibraryControls explorer={explorer}/> : null}
+
+      {hasLinkedRecords && explorer.filteredCount === 0 ? <FilterNoResultsState explorer={explorer}/> : null}
+
       <div className="category-media-list">
-        {categoryGroup.mediaItems.map((mediaItem) => (<CategoryMediaCard key={mediaItem.id} mediaItem={mediaItem}/>))}
+        {visibleMediaItems.map((mediaItem) => (<CategoryMediaCard filteredRecords={recordsByMediaId.get(mediaItem.id)} key={mediaItem.id} mediaItem={mediaItem}/>))}
       </div>
     </section>);
 }
@@ -257,7 +350,8 @@ function MediaProfile({ mediaItem }) {
       <MediaFacts mediaItem={mediaItem}/>
     </article>);
 }
-function CategoryMediaCard({ mediaItem }) {
+function CategoryMediaCard({ filteredRecords, mediaItem }) {
+    const records = filteredRecords || mediaItem.watchRecords;
     return (<article className="category-media-card">
       <header className="category-media-heading">
         <div>
@@ -272,7 +366,7 @@ function CategoryMediaCard({ mediaItem }) {
 
       <MediaFacts mediaItem={mediaItem}/>
 
-      {mediaItem.watchRecords.length > 0 ? (<LinkedRecordCollection compact records={mediaItem.watchRecords} title="Registros da obra"/>) : (<MediaNoRecordsState compact mediaItem={mediaItem}/>)}
+      {records.length > 0 ? (<LinkedRecordCollection compact records={records} title="Registros da obra"/>) : (<MediaNoRecordsState compact mediaItem={mediaItem}/>)}
     </article>);
 }
 function MediaFacts({ mediaItem }) {
@@ -381,6 +475,57 @@ function LibrarySummary({ data }) {
       <MetricCard detail="anos carregados" label="Anos" value={data.normalized.yearGroups.length}/>
       <MetricCard detail="media_id ausente" label="Orfaos" value={relationships.orphanWatchRecords}/>
     </div>);
+}
+function LibraryControls({ explorer }) {
+    return (<section className="library-controls" aria-labelledby="library-controls-title">
+      <header className="library-controls-header">
+        <div>
+          <span className="file-card-label">Filtros</span>
+          <h2 id="library-controls-title">Recorte da biblioteca</h2>
+        </div>
+        <strong>
+          {explorer.filteredCount} de {explorer.totalCount}
+        </strong>
+      </header>
+
+      <div className="library-filter-grid">
+        {libraryFilterControls.map((control) => (<FilterSelect control={control} explorer={explorer} key={control.key}/>))}
+
+        <label className="library-control-field">
+          <span>Ordenar por</span>
+          <select value={explorer.sort.field} onChange={(event) => explorer.updateSortField(event.target.value)}>
+            {LIBRARY_SORT_FIELDS.map((option) => (<option key={option.value} value={option.value}>
+                {option.label}
+              </option>))}
+          </select>
+        </label>
+
+        <label className="library-control-field">
+          <span>Direcao</span>
+          <select value={explorer.sort.direction} onChange={(event) => explorer.updateSortDirection(event.target.value)}>
+            {LIBRARY_SORT_DIRECTIONS.map((option) => (<option key={option.value} value={option.value}>
+                {option.label}
+              </option>))}
+          </select>
+        </label>
+
+        <button className="library-clear-button" disabled={!explorer.hasActiveFilters} onClick={explorer.clearFilters} type="button">
+          Limpar filtros
+        </button>
+      </div>
+    </section>);
+}
+function FilterSelect({ control, explorer }) {
+    const options = explorer.filterOptions[control.optionsKey] || [];
+    return (<label className="library-control-field">
+      <span>{control.label}</span>
+      <select value={explorer.filters[control.key]} onChange={(event) => explorer.updateFilter(control.key, event.target.value)}>
+        <option value="">{control.emptyLabel}</option>
+        {options.map((option) => (<option key={option.value} value={option.value}>
+            {formatOptionLabel(option.value)} ({option.count})
+          </option>))}
+      </select>
+    </label>);
 }
 function YearLibrary({ isSingleYear = false, yearGroups }) {
     return (<section className="year-library" aria-label={isSingleYear ? "Biblioteca do ano" : "Biblioteca por ano"}>
@@ -509,6 +654,22 @@ function LibraryEmptyState() {
         </p>
       </div>
     </article>);
+}
+function FilterNoResultsState({ explorer }) {
+    const hiddenRecordsText =
+        explorer.totalCount === 1
+            ? "o registro disponivel."
+            : `todos os ${explorer.totalCount} registros disponiveis.`;
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Sem resultados</span>
+        <h2>Nenhum Watch Record neste recorte</h2>
+        <p>Os filtros ativos ocultaram {hiddenRecordsText}</p>
+      </div>
+    </article>);
+}
+function formatOptionLabel(value) {
+    return formatMetricLabel(value);
 }
 function formatMetricLabel(value) {
     return String(value).replace(/[_-]/g, " ");
