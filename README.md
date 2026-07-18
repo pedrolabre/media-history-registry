@@ -199,6 +199,7 @@ media-history-registry/
 `-- web/
     |-- index.html
     |-- package.json
+    |-- package-lock.json
     |-- vite.config.js
     `-- src/
         |-- App.jsx
