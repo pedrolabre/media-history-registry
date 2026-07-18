@@ -20,5 +20,9 @@ export function FileInfo({ output }) {
         <dt>Tamanho</dt>
         <dd>{output.sizeLabel}</dd>
       </div>
+      <div>
+        <dt>Acao manual</dt>
+        <dd>Salvar no caminho indicado e commitar depois</dd>
+      </div>
     </dl>);
 }

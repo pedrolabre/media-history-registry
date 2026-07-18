@@ -197,8 +197,8 @@ function resolveRoute(pathname) {
     return {
         eyebrow: "404",
         title: "Pagina indisponivel",
-        description: "Essa rota ainda nao existe no mapa inicial da aplicacao.",
-        content: <RouteWorkspace label="Rota" path="/" value="nao registrada"/>
+        description: "Essa rota nao esta no mapa da aplicacao. A biblioteca completa continua disponivel.",
+        content: <RouteWorkspace />
     };
 }
 function isActive(pathname, href) {
@@ -420,20 +420,30 @@ function MediaNotFoundState({ mediaId }) {
         <span className="file-card-label">Midia inexistente</span>
         <h2>Nenhuma obra encontrada</h2>
         <p>
-          Nao existe Media Item com id <code>{mediaId}</code> no snapshot atual
-          de <code>data/media</code>.
+          O snapshot atual nao encontrou Media Item com id{" "}
+          <code>{mediaId}</code> em <code>data/media</code>.
+        </p>
+        <p>
+          Para recuperar este recorte, gere ou adicione um Media Item com esse
+          id, salve o arquivo no repositorio e faca o commit manualmente.
         </p>
       </div>
-      <a className="inline-action" data-app-link href="/library">
-        Ver biblioteca completa
-      </a>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/library">
+          Ver biblioteca completa
+        </a>
+        <a className="inline-action" data-app-link href="/generate/media">
+          Gerar Media Item
+        </a>
+      </div>
     </article>);
 }
 function MediaNoRecordsState({ compact = false, mediaItem }) {
     if (compact) {
         return (<p className="compact-empty-state" role="status">
           <strong>Sem Watch Records ligados.</strong> Nenhum registro referencia{" "}
-          <code>{mediaItem.id}</code> neste snapshot.
+          <code>{mediaItem.id}</code> neste snapshot. Adicione um Watch Record
+          com esse media_id para ligar a obra no proximo build.
         </p>);
     }
 
@@ -445,6 +455,16 @@ function MediaNoRecordsState({ compact = false, mediaItem }) {
           {mediaItem.title} existe como Media Item, mas nenhum Watch Record
           referencia <code>{mediaItem.id}</code> neste snapshot.
         </p>
+        <p>
+          O proximo passo possivel e gerar ou adicionar um Watch Record usando
+          esse media_id, salvar o arquivo em <code>data/history</code> e fazer
+          o commit manual.
+        </p>
+      </div>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/generate/watch-record">
+          Gerar Watch Record
+        </a>
       </div>
     </article>);
 }
@@ -457,10 +477,19 @@ function CategoryNoMediaState({ category }) {
           O snapshot atual nao encontrou Media Items em{" "}
           <code>data/media/{category}</code>.
         </p>
+        <p>
+          Para preencher esta categoria, gere ou adicione um Media Item, salve
+          no caminho indicado e commite manualmente.
+        </p>
       </div>
-      <a className="inline-action" data-app-link href="/library">
-        Ver biblioteca completa
-      </a>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/library">
+          Ver biblioteca completa
+        </a>
+        <a className="inline-action" data-app-link href="/generate/media">
+          Gerar Media Item
+        </a>
+      </div>
     </article>);
 }
 function CategoryNoRecordsState({ categoryGroup }) {
@@ -474,6 +503,16 @@ function CategoryNoRecordsState({ categoryGroup }) {
           {categoryGroup.mediaItemCount === 1 ? "Media Item" : "Media Items"},
           mas ainda nao possui Watch Records ligados.
         </p>
+        <p>
+          A categoria ja tem obras cadastradas. Para aparecer na biblioteca de
+          consumo, adicione Watch Records que referenciem esses media_id e faca
+          o commit manualmente.
+        </p>
+      </div>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/generate/watch-record">
+          Gerar Watch Record
+        </a>
       </div>
     </article>);
 }
@@ -499,6 +538,10 @@ function LibraryControls({ explorer }) {
         <div>
           <span className="file-card-label">Filtros</span>
           <h2 id="library-controls-title">Recorte da biblioteca</h2>
+          <p>
+            Filtros e ordenacao mudam apenas esta visualizacao; nenhuma
+            preferencia e salva no repositorio.
+          </p>
         </div>
         <strong>
           {explorer.filteredCount} de {explorer.totalCount}
@@ -550,7 +593,9 @@ function YearLibrary({ isSingleYear = false, yearGroups }) {
           <span className="file-card-label">Biblioteca por ano</span>
           <p>
             Registros agrupados por ano em ordem decrescente, calculados a
-            partir dos JSONs carregados no build.
+            partir dos JSONs carregados no build. Novos arquivos aparecem aqui
+            depois de salvos no repositorio, commitados manualmente e incluidos
+            em um novo build.
           </p>
         </div>) : null}
 
@@ -598,8 +643,10 @@ function YearRecordCard({ record }) {
       </dl>
 
       {isOrphan ? (<p className="year-record-recovery">
-          Adicione um Media Item com id <code>{record.mediaId}</code> para
-          ligar este Watch Record sem alterar o JSON original.
+          Adicione um Media Item com id <code>{record.mediaId}</code> em{" "}
+          <code>data/media</code> e faca o commit manual para ligar este Watch
+          Record no proximo build. O JSON original do registro nao precisa
+          mudar.
         </p>) : null}
     </li>);
 }
@@ -632,13 +679,18 @@ function YearEmptyState({ hasLibraryRecords, year }) {
         <h2>Nenhum registro em {year}</h2>
         <p>
           {hasLibraryRecords
-            ? "A biblioteca possui registros em outros anos, mas nenhum Watch Record foi encontrado para este recorte."
-            : "O snapshot atual ainda nao encontrou Watch Records em data/history."}
+            ? `A biblioteca possui registros em outros anos, mas nenhum Watch Record foi encontrado para ${year}. Se este ano deve existir, adicione um arquivo em data/history/${year} e faca o commit manual.`
+            : "O snapshot atual ainda nao encontrou Watch Records em data/history. Gere ou adicione um registro, salve o arquivo no repositorio e faca o commit manual."}
         </p>
       </div>
-      <a className="inline-action" data-app-link href="/library">
-        Ver biblioteca completa
-      </a>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/library">
+          Ver biblioteca completa
+        </a>
+        <a className="inline-action" data-app-link href="/generate/watch-record">
+          Gerar Watch Record
+        </a>
+      </div>
     </article>);
 }
 function LoaderErrorState({ data }) {
@@ -647,14 +699,16 @@ function LoaderErrorState({ data }) {
         <span className="file-card-label">Loader</span>
         <h2>Carregamento parcial</h2>
         <p>
-          O app encontrou dados, mas alguns paths precisam de revisao. Os
-          arquivos JSON continuam intactos no repositorio.
+          O app manteve os dados que conseguiu carregar, mas alguns paths
+          precisam de revisao. Ajuste os caminhos listados, salve a correcao no
+          repositorio e rode um novo build; nenhum JSON foi alterado pela
+          aplicacao.
         </p>
       </div>
       <ul className="loader-error-list">
         {data.errors.map((error) => (<li key={`${error.path}-${error.message}`}>
             <code>{error.path}</code>
-            <span>{error.message}</span>
+            <span>{error.message} Acao possivel: revisar o caminho do arquivo.</span>
           </li>))}
       </ul>
     </article>);
@@ -669,6 +723,16 @@ function LibraryEmptyState() {
           <code>data/history</code>. Media Items podem existir, mas a
           biblioteca por ano nasce dos registros de consumo.
         </p>
+        <p>
+          Use o gerador para copiar ou baixar um Watch Record, salve o JSON no
+          caminho indicado e faca o commit manual. O app nao salva no
+          repositorio nem escreve no GitHub.
+        </p>
+      </div>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/generate/watch-record">
+          Gerar Watch Record
+        </a>
       </div>
     </article>);
 }
@@ -681,7 +745,10 @@ function FilterNoResultsState({ explorer }) {
       <div>
         <span className="file-card-label">Sem resultados</span>
         <h2>Nenhum Watch Record neste recorte</h2>
-        <p>Os filtros ativos ocultaram {hiddenRecordsText}</p>
+        <p>
+          Os filtros ativos ocultaram {hiddenRecordsText} Ajuste ou limpe os
+          filtros para ver o snapshot de novo; nenhum registro foi removido.
+        </p>
       </div>
     </article>);
 }
@@ -691,20 +758,21 @@ function formatOptionLabel(value) {
 function formatMetricLabel(value) {
     return String(value).replace(/[_-]/g, " ");
 }
-function RouteWorkspace({ label, path, value }) {
-    return (<div className="route-board">
-      <div className="file-card">
-        <span className="file-card-label">{label}</span>
-        <strong>{decodeURIComponent(value)}</strong>
+function RouteWorkspace() {
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Rota nao registrada</span>
+        <h2>Este endereco nao abre uma gaveta conhecida</h2>
+        <p>
+          A aplicacao nao criou, moveu ou salvou nada. Volte para a biblioteca
+          completa e escolha uma rota do mapa atual.
+        </p>
       </div>
-      <div className="file-card">
-        <span className="file-card-label">Origem esperada</span>
-        <code>{path}</code>
+      <div className="loader-state-actions">
+        <a className="inline-action" data-app-link href="/library">
+          Abrir biblioteca
+        </a>
       </div>
-      <div className="file-card">
-        <span className="file-card-label">Status</span>
-        <strong>Rota pronta</strong>
-      </div>
-    </div>);
+    </article>);
 }
 export default App;

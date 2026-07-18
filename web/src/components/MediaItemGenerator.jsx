@@ -58,7 +58,7 @@ export function MediaItemGenerator() {
         </div>
         <div className="file-card">
           <span className="file-card-label">Status</span>
-          <strong>{result.ok ? "JSON pronto" : "Campos pendentes"}</strong>
+          <strong>{result.ok ? "JSON valido" : "Revisao pendente"}</strong>
         </div>
       </div>
 
@@ -109,15 +109,17 @@ export function MediaItemGenerator() {
         </button>
       </form>
 
-      {result.ok ? (<JsonOutputBlock description="Arquivo pronto para copiar ou baixar e salvar manualmente no repositorio." file={result.file} title="Preview de Media Item" value={result.value}/>) : (<article className="json-output-block form-output-placeholder" role="status">
+      {result.ok ? (<JsonOutputBlock description="Media Item pronto para copiar ou baixar. Salvar em data/media, commitar e enviar ao GitHub continuam manuais." file={result.file} title="Preview de Media Item" value={result.value}/>) : (<article className="json-output-block form-output-placeholder" role="status">
           <div className="json-output-header">
             <div>
               <span className="file-card-label">Preview bloqueado</span>
               <h2>Media Item incompleto</h2>
               <p>
                 {previewErrorCount === 1
-                ? "Corrija 1 campo para liberar o JSON."
-                : `Corrija ${previewErrorCount} campos para liberar o JSON.`}
+                ? "Revise 1 campo para liberar o JSON valido."
+                : `Revise ${previewErrorCount} campos para liberar o JSON valido.`}{" "}
+                O preview, a copia e o download ficam indisponiveis enquanto o
+                arquivo nao puder ser gerado. Nenhum arquivo foi criado.
               </p>
             </div>
           </div>

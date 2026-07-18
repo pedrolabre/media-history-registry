@@ -13,6 +13,10 @@ export function JsonOutputBlock({ description, file, title, value }) {
           <span className="file-card-label">Output reutilizavel</span>
           <h2 id={titleId}>{title}</h2>
           <p>{description}</p>
+          <p className="json-output-manual-note">
+            Copiar ou baixar entrega o conteudo do arquivo; salvar no
+            repositorio, commitar e enviar para o GitHub continuam manuais.
+          </p>
         </div>
       </div>
 
@@ -23,8 +27,13 @@ export function JsonOutputBlock({ description, file, title, value }) {
             <CopyButton text={result.output.json}/>
             <DownloadButton output={result.output}/>
           </div>
-        </>) : (<p className="json-preview-error" role="alert">
-          {result.error}
-        </p>)}
+        </>) : (<div className="json-preview-error" role="alert">
+          <strong>JSON nao gerado</strong>
+          <span>
+            Nao foi possivel montar o arquivo a partir dos dados atuais. Revise
+            os campos; nenhum arquivo foi salvo no repositorio.
+          </span>
+          <code>{result.error}</code>
+        </div>)}
     </article>);
 }
