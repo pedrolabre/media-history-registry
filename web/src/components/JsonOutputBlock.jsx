@@ -1,15 +1,17 @@
+import { useId } from "react";
 import { CopyButton } from "./CopyButton";
 import { DownloadButton } from "./DownloadButton";
 import { FileInfo } from "./FileInfo";
 import { JsonPreview } from "./JsonPreview";
 import { buildJsonOutput } from "../utils/jsonGeneration";
 export function JsonOutputBlock({ description, file, title, value }) {
+    const titleId = useId();
     const result = buildJsonOutput(value, file);
-    return (<article className="json-output-block">
+    return (<article className="json-output-block" aria-labelledby={titleId}>
       <div className="json-output-header">
         <div>
           <span className="file-card-label">Output reutilizavel</span>
-          <h2>{title}</h2>
+          <h2 id={titleId}>{title}</h2>
           <p>{description}</p>
         </div>
       </div>

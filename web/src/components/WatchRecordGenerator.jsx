@@ -51,7 +51,7 @@ export function WatchRecordGenerator() {
     const filePath = result.ok ? result.file.repositoryPath : "data/history/{year}/{slug}.json";
     const previewErrorCount = Object.keys(result.errors).length;
     return (<div className="media-generator watch-record-generator">
-      <div className="generated-summary" aria-label="Resumo do Watch Record">
+      <div className="generated-summary" aria-label="Resumo do Watch Record" role="group">
         <div className="file-card">
           <span className="file-card-label">ID gerado</span>
           <strong>{result.id || "aguardando dados"}</strong>
@@ -66,7 +66,7 @@ export function WatchRecordGenerator() {
         </div>
       </div>
 
-      <form className="media-item-form watch-record-form" noValidate onSubmit={handleSubmit}>
+      <form aria-label="Formulario de Watch Record" className="media-item-form watch-record-form" noValidate onSubmit={handleSubmit}>
         <fieldset className="form-section">
           <legend>Registro</legend>
           <div className="form-grid">
@@ -144,7 +144,7 @@ function TextField({ error, inputMode, label, name, onBlur, onChange, required, 
         {label}
         {required ? <span aria-hidden="true">*</span> : null}
       </label>
-      <input aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} inputMode={inputMode} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} type={type} value={value}/>
+      <input aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} inputMode={inputMode} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} required={required} type={type} value={value}/>
       <FieldError id={`${name}-error`} message={error}/>
     </div>);
 }
@@ -154,7 +154,7 @@ function SelectField({ error, label, name, onBlur, onChange, options, required, 
         {label}
         {required ? <span aria-hidden="true">*</span> : null}
       </label>
-      <select aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} value={value}>
+      <select aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} required={required} value={value}>
         <option value="">Selecione</option>
         {options.map((option) => (<option key={option.value} value={option.value}>
             {option.label}

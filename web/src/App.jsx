@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MediaItemGenerator } from "./components/MediaItemGenerator";
 import { WatchRecordGenerator } from "./components/WatchRecordGenerator";
 import {
@@ -34,11 +34,24 @@ const libraryFilterControls = [
 function App() {
     const [pathname, setPathname] = useState(() => window.location.pathname);
     const route = useMemo(() => resolveRoute(pathname), [pathname]);
+    const workspaceRef = useRef(null);
+    const hasMountedRef = useRef(false);
+
     useEffect(() => {
         const handlePopState = () => setPathname(window.location.pathname);
         window.addEventListener("popstate", handlePopState);
         return () => window.removeEventListener("popstate", handlePopState);
     }, []);
+
+    useEffect(() => {
+        if (!hasMountedRef.current) {
+            hasMountedRef.current = true;
+            return;
+        }
+
+        workspaceRef.current?.focus({ preventScroll: true });
+    }, [pathname]);
+
     function handleNavigation(event) {
         if (event.defaultPrevented ||
             event.button !== 0 ||
@@ -70,13 +83,16 @@ function App() {
       <a className="skip-link" href="#workspace">
         Pular para o workspace
       </a>
+      <p className="sr-only" aria-live="polite">
+        Rota atual: {route.title}
+      </p>
 
-      <main className="registry-board" id="workspace">
-        <section className="ledger-cover" aria-labelledby="page-title">
+      <main aria-describedby="page-description" className="registry-board" id="workspace" ref={workspaceRef} tabIndex={-1}>
+        <header className="ledger-cover" aria-labelledby="page-title">
           <div className="identity-panel">
             <p className="stamp">Media History Registry</p>
             <h1 id="page-title">{route.title}</h1>
-            <p className="lede">{route.description}</p>
+            <p className="lede" id="page-description">{route.description}</p>
           </div>
 
           <nav className="file-tabs" aria-label="Navegacao principal">
@@ -100,22 +116,23 @@ function App() {
               <dd>Manual</dd>
             </div>
           </dl>
-        </section>
+        </header>
 
-        <section className="workbench-grid" aria-label={route.eyebrow}>
+        <section className="workbench-grid" aria-labelledby="workspace-heading">
           <aside className="drawer-panel" aria-labelledby="drawer-title">
             <p className="panel-label">Mapa</p>
             <h2 id="drawer-title">Gavetas iniciais</h2>
             <div className="drawer-list">
-              {routeExamples.map((item) => (<a className="drawer-row" data-app-link href={item.href} key={item.href}>
+              {routeExamples.map((item) => (<a aria-current={pathname === item.href ? "page" : undefined} className="drawer-row" data-app-link href={item.href} key={item.href}>
                   <span>{item.label}</span>
                   <code>{item.value}</code>
                 </a>))}
             </div>
           </aside>
 
-          <section className="workspace-panel">
-            <p className="panel-label">{route.eyebrow}</p>
+          <section className="workspace-panel" aria-labelledby="workspace-heading">
+            <h2 className="sr-only" id="workspace-heading">{route.eyebrow}</h2>
+            <p aria-hidden="true" className="panel-label">{route.eyebrow}</p>
             {route.content}
           </section>
         </section>
@@ -461,7 +478,7 @@ function CategoryNoRecordsState({ categoryGroup }) {
     </article>);
 }
 function MetricCard({ detail, label, value }) {
-    return (<article className="library-metric">
+    return (<article className="library-metric" aria-label={`${label}: ${value}`}>
       <span className="file-card-label">{label}</span>
       <strong>{value}</strong>
       <p>{detail}</p>

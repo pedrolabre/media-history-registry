@@ -47,7 +47,7 @@ export function MediaItemGenerator() {
     const filePath = result.ok ? result.file.repositoryPath : "data/media/{category}/{slug}.json";
     const previewErrorCount = Object.keys(result.errors).length;
     return (<div className="media-generator">
-      <div className="generated-summary" aria-label="Resumo do Media Item">
+      <div className="generated-summary" aria-label="Resumo do Media Item" role="group">
         <div className="file-card">
           <span className="file-card-label">ID gerado</span>
           <strong>{result.id || "aguardando titulo"}</strong>
@@ -62,7 +62,7 @@ export function MediaItemGenerator() {
         </div>
       </div>
 
-      <form className="media-item-form" noValidate onSubmit={handleSubmit}>
+      <form aria-label="Formulario de Media Item" className="media-item-form" noValidate onSubmit={handleSubmit}>
         <fieldset className="form-section">
           <legend>Identidade</legend>
           <div className="form-grid">
@@ -130,7 +130,7 @@ function TextField({ error, inputMode, label, name, onBlur, onChange, required, 
         {label}
         {required ? <span aria-hidden="true">*</span> : null}
       </label>
-      <input aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} inputMode={inputMode} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} type="text" value={value}/>
+      <input aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} inputMode={inputMode} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} required={required} type="text" value={value}/>
       <FieldError id={`${name}-error`} message={error}/>
     </div>);
 }
@@ -140,7 +140,7 @@ function SelectField({ error, label, name, onBlur, onChange, options, required, 
         {label}
         {required ? <span aria-hidden="true">*</span> : null}
       </label>
-      <select aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} value={value}>
+      <select aria-describedby={error ? `${name}-error` : undefined} aria-invalid={Boolean(error)} id={name} name={name} onBlur={onBlur} onChange={(event) => onChange(event.target.value)} required={required} value={value}>
         <option value="">Selecione</option>
         {options.map((option) => (<option key={option.value} value={option.value}>
             {option.label}

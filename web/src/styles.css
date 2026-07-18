@@ -43,6 +43,7 @@
 html {
   min-width: 320px;
   color-scheme: light;
+  scroll-padding-top: var(--space-5);
 }
 
 body {
@@ -57,6 +58,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   letter-spacing: 0;
+  overflow-x: clip;
 }
 
 a {
@@ -68,6 +70,7 @@ input,
 select,
 textarea {
   font: inherit;
+  max-width: 100%;
 }
 
 code {
@@ -79,6 +82,21 @@ code {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
   box-shadow: var(--focus-ring);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.registry-board:focus {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 6px;
 }
 
 .app-shell {
@@ -170,10 +188,10 @@ h1 {
   max-width: 12ch;
   margin-bottom: var(--space-3);
   font-family: var(--font-display);
-  font-size: clamp(2.1rem, 7vw, 4.7rem);
+  font-size: 4.5rem;
   font-weight: 900;
   letter-spacing: 0;
-  line-height: 0.9;
+  line-height: 1;
   overflow-wrap: anywhere;
   text-transform: uppercase;
 }
@@ -257,6 +275,7 @@ p {
 }
 
 .file-tab small {
+  min-width: 0;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 4px 6px;
@@ -265,6 +284,8 @@ p {
   font-size: 0.68rem;
   font-weight: 900;
   line-height: 1;
+  overflow-wrap: anywhere;
+  text-align: right;
   text-transform: uppercase;
 }
 
@@ -364,7 +385,9 @@ p {
 }
 
 .drawer-row span {
+  min-width: 0;
   font-weight: 900;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
@@ -499,6 +522,10 @@ p {
   align-items: end;
 }
 
+.library-controls-header > div {
+  min-width: 0;
+}
+
 .library-controls-header h2 {
   margin-bottom: 0;
 }
@@ -548,6 +575,7 @@ p {
   box-shadow: 3px 3px 0 var(--color-shadow);
   color: var(--color-ink);
   font-weight: 900;
+  line-height: 1.25;
 }
 
 .library-clear-button {
@@ -684,6 +712,7 @@ p {
 
 .year-record-unit {
   justify-self: start;
+  max-width: 100%;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 7px 9px;
@@ -691,6 +720,7 @@ p {
   color: var(--color-board);
   font-family: var(--font-display);
   line-height: 1;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
@@ -796,6 +826,14 @@ p {
   justify-content: space-between;
   gap: var(--space-3);
   align-items: end;
+}
+
+.media-profile-heading > div,
+.category-header > div,
+.category-media-heading > div,
+.linked-records-header > div,
+.json-output-header > div {
+  min-width: 0;
 }
 
 .media-profile-heading h2,
@@ -1304,9 +1342,11 @@ p {
 
 .json-preview {
   min-width: 0;
+  max-width: 100%;
   max-height: 430px;
   margin: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: var(--space-4);
@@ -1315,6 +1355,7 @@ p {
   color: var(--color-board);
   font-size: 0.86rem;
   line-height: 1.55;
+  scrollbar-gutter: stable;
   white-space: pre;
 }
 
@@ -1356,6 +1397,7 @@ p {
   cursor: pointer;
   font-weight: 950;
   line-height: 1.1;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
   transition:
     box-shadow 120ms ease,
@@ -1402,6 +1444,7 @@ p {
 
 .form-section {
   min-width: 0;
+  min-inline-size: 0;
   margin: 0;
   border: 2px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -1462,6 +1505,7 @@ p {
   font-size: 0.78rem;
   font-weight: 950;
   letter-spacing: 0;
+  overflow-wrap: anywhere;
   text-transform: uppercase;
 }
 
@@ -1539,25 +1583,32 @@ p {
 }
 
 @media (max-width: 900px) {
+  h1 {
+    font-size: 3.4rem;
+  }
+
   .ledger-cover,
   .workbench-grid {
     grid-template-columns: 1fr;
   }
 
   .file-tabs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .registry-flow,
   .generator-board,
   .route-board,
   .library-metrics,
-  .library-filter-grid,
   .normalization-board,
   .generated-summary,
   .json-file-info,
   .json-actions {
     grid-template-columns: 1fr;
+  }
+
+  .library-filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .file-card-wide {
@@ -1583,6 +1634,18 @@ p {
     padding: 10px;
   }
 
+  .registry-board:focus {
+    outline-offset: 3px;
+  }
+
+  h1 {
+    font-size: 2.35rem;
+  }
+
+  h2 {
+    font-size: 1.02rem;
+  }
+
   .identity-panel,
   .drawer-panel,
   .workspace-panel {
@@ -1598,6 +1661,15 @@ p {
   .drawer-row,
   .control-stamps div {
     min-height: 44px;
+  }
+
+  .file-tab {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .file-tab small {
+    justify-self: start;
+    text-align: left;
   }
 
   .drawer-row {
@@ -1646,7 +1718,8 @@ p {
   .media-profile-heading,
   .category-header,
   .category-media-heading,
-  .linked-records-header {
+  .linked-records-header,
+  .json-output-header {
     display: grid;
   }
 
@@ -1657,5 +1730,34 @@ p {
 
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .json-preview {
+    padding: var(--space-3);
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .stamp,
+  .panel-label,
+  .file-card-label {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .control-stamps dd,
+  .file-card strong,
+  .path-chip {
+    font-size: 0.88rem;
+  }
+
+  .year-record-facts div {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .library-metric strong {
+    font-size: 1.85rem;
   }
 }
