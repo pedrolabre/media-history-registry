@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { MediaItemGenerator } from "./components/MediaItemGenerator";
 import { WatchRecordGenerator } from "./components/WatchRecordGenerator";
+import { staticLibraryData } from "./data-loader";
 const navItems = [
     { href: "/", label: "Biblioteca", note: "views" },
     { href: "/generate/media", label: "Midia", note: "media item" },
@@ -108,7 +109,7 @@ function resolveRoute(pathname) {
             eyebrow: "Biblioteca",
             title: "Historico audiovisual",
             description: "Uma bancada para transformar obras assistidas em registros claros, portateis e versionados.",
-            content: <LibraryWorkspace />
+            content: <LibraryWorkspace data={staticLibraryData}/>
         };
     }
     if (pathname === "/generate/media") {
@@ -167,24 +168,95 @@ function isActive(pathname, href) {
     }
     return pathname === href;
 }
-function LibraryWorkspace() {
-    return (<div className="registry-flow">
-      <article className="record-lane record-lane-media">
-        <span className="lane-number">01</span>
-        <h2>Media Item</h2>
-        <p>O que existe: obra, categoria, formato, status e metadados estaveis.</p>
-      </article>
-      <article className="record-lane record-lane-watch">
-        <span className="lane-number">02</span>
-        <h2>Watch Record</h2>
-        <p>O que voce consumiu: ano, unidade assistida, status pessoal e plataforma.</p>
-      </article>
-      <article className="record-lane record-lane-view">
-        <span className="lane-number">03</span>
-        <h2>Library View</h2>
-        <p>O que a interface deriva: ano, midia, categoria, filtros e rotulos visuais.</p>
-      </article>
+function LibraryWorkspace({ data }) {
+    const isEmpty = data.counts.mediaItems === 0 && data.counts.watchRecords === 0;
+    return (<div className="library-loader">
+      <div className="library-metrics" aria-label="Dados carregados">
+        <MetricCard detail="data/media" label="Media Items" value={data.counts.mediaItems}/>
+        <MetricCard detail="data/history" label="Watch Records" value={data.counts.watchRecords}/>
+        <MetricCard detail="pastas detectadas" label="Categorias" value={data.counts.categories}/>
+        <MetricCard detail="anos detectados" label="Anos" value={data.counts.years}/>
+      </div>
+
+      {data.status === "error" ? <LoaderErrorState data={data}/> : null}
+
+      {data.status !== "error" && isEmpty ? <LoaderEmptyState /> : null}
+
+      {data.status !== "error" && !isEmpty ? <LoaderReadyState data={data}/> : null}
     </div>);
+}
+function MetricCard({ detail, label, value }) {
+    return (<article className="library-metric">
+      <span className="file-card-label">{label}</span>
+      <strong>{value}</strong>
+      <p>{detail}</p>
+    </article>);
+}
+function LoaderReadyState({ data }) {
+    return (<article className="loader-state loader-state-ready" role="status">
+      <div>
+        <span className="file-card-label">Loader</span>
+        <h2>Snapshot carregado</h2>
+        <p>
+          Os dados abaixo foram descobertos no build e existem apenas como visao
+          derivada da aplicacao.
+        </p>
+      </div>
+      <dl className="source-ledger">
+        <div>
+          <dt>Categorias</dt>
+          <dd>{formatList(data.categories)}</dd>
+        </div>
+        <div>
+          <dt>Anos</dt>
+          <dd>{formatList(data.years)}</dd>
+        </div>
+        <div>
+          <dt>Primeiro Media Item</dt>
+          <dd>{formatPath(data.mediaItems[0]?.origin.path)}</dd>
+        </div>
+        <div>
+          <dt>Primeiro Watch Record</dt>
+          <dd>{formatPath(data.watchRecords[0]?.origin.path)}</dd>
+        </div>
+      </dl>
+    </article>);
+}
+function LoaderErrorState({ data }) {
+    return (<article className="loader-state loader-state-error" role="alert">
+      <div>
+        <span className="file-card-label">Loader</span>
+        <h2>Carregamento parcial</h2>
+        <p>
+          O app encontrou dados, mas alguns paths precisam de revisao. Os
+          arquivos JSON continuam intactos no repositorio.
+        </p>
+      </div>
+      <ul className="loader-error-list">
+        {data.errors.map((error) => (<li key={`${error.path}-${error.message}`}>
+            <code>{error.path}</code>
+            <span>{error.message}</span>
+          </li>))}
+      </ul>
+    </article>);
+}
+function LoaderEmptyState() {
+    return (<article className="loader-state loader-state-empty" role="status">
+      <div>
+        <span className="file-card-label">Loader</span>
+        <h2>Nenhum JSON carregado</h2>
+        <p>
+          O snapshot atual nao encontrou arquivos em <code>data/media</code> ou{" "}
+          <code>data/history</code>.
+        </p>
+      </div>
+    </article>);
+}
+function formatList(values) {
+    return values.length > 0 ? values.join(", ") : "nenhum";
+}
+function formatPath(value) {
+    return value || "nenhum arquivo";
 }
 function RouteWorkspace({ label, path, value }) {
     return (<div className="route-board">

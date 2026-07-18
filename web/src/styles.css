@@ -415,6 +415,133 @@ p {
   font-weight: 750;
 }
 
+.library-loader {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.library-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.library-metric,
+.loader-state,
+.source-ledger div,
+.loader-error-list li {
+  min-width: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.library-metric {
+  display: grid;
+  align-content: space-between;
+  min-height: 170px;
+  padding: var(--space-4);
+  background: var(--color-lilac);
+}
+
+.library-metric:nth-child(2) {
+  background: var(--color-coral);
+}
+
+.library-metric:nth-child(3) {
+  background: var(--color-sky);
+}
+
+.library-metric:nth-child(4) {
+  background: var(--color-lime);
+}
+
+.library-metric strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 2.35rem;
+  line-height: 1;
+}
+
+.library-metric p {
+  margin-bottom: 0;
+  color: var(--color-ink);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.loader-state {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-mint);
+}
+
+.loader-state h2,
+.loader-state p {
+  margin-bottom: 0;
+}
+
+.loader-state p {
+  max-width: 72ch;
+  color: var(--color-ink);
+  font-weight: 750;
+}
+
+.loader-state-error {
+  background: var(--color-coral);
+}
+
+.loader-state-empty {
+  background: var(--color-lilac);
+}
+
+.source-ledger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.source-ledger div {
+  padding: var(--space-3);
+  background: var(--color-board);
+}
+
+.source-ledger dt {
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.source-ledger dd {
+  margin: 5px 0 0;
+  color: var(--color-ink);
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.loader-error-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.loader-error-list li {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-board);
+}
+
+.loader-error-list code {
+  color: var(--color-ink);
+  font-weight: 900;
+}
+
 .generator-board,
 .route-board {
   display: grid;
@@ -812,6 +939,7 @@ p {
   .registry-flow,
   .generator-board,
   .route-board,
+  .library-metrics,
   .generated-summary,
   .json-file-info,
   .json-actions {
@@ -860,6 +988,10 @@ p {
 
   .drawer-row code {
     justify-self: start;
+  }
+
+  .source-ledger {
+    grid-template-columns: 1fr;
   }
 
   .form-grid {
