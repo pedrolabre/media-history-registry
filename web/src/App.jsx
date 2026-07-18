@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { JsonOutputBlock } from "./components/JsonOutputBlock";
+import { createMediaItemFileDescriptor, createWatchRecordFileDescriptor, createWatchRecordId } from "./utils/jsonGeneration";
+import { slugify } from "./utils/slugify";
 const navItems = [
     { href: "/", label: "Biblioteca", note: "views" },
     { href: "/generate/media", label: "Midia", note: "media item" },
@@ -9,6 +12,58 @@ const routeExamples = [
     { href: "/library/media/spy-family", label: "Midia", value: "spy-family" },
     { href: "/library/category/anime", label: "Categoria", value: "anime" }
 ];
+const demoMediaId = slugify("Spy Family");
+const demoMediaItem = {
+    id: demoMediaId,
+    title: "Spy Family",
+    original_title: null,
+    category: "anime",
+    subcategories: [],
+    format: "series",
+    status: "ongoing",
+    genres: ["action", "comedy"],
+    countries: ["JP"],
+    studios: ["Wit Studio", "CloverWorks"],
+    directors: [],
+    first_release_year: 2022,
+    external_ids: {
+        imdb: null,
+        tmdb: null,
+        anilist: null,
+        myanimelist: null
+    },
+    poster: null,
+    notes: null
+};
+const demoMediaFile = createMediaItemFileDescriptor({
+    category: String(demoMediaItem.category),
+    id: demoMediaId
+});
+const demoWatchUnit = {
+    type: "season",
+    season_number: 2
+};
+const demoWatchFileInput = {
+    mediaId: demoMediaId,
+    year: 2026,
+    unit: demoWatchUnit,
+    rewatch: false
+};
+const demoWatchRecord = {
+    id: createWatchRecordId(demoWatchFileInput),
+    media_id: demoMediaId,
+    year: demoWatchFileInput.year,
+    unit: demoWatchUnit,
+    watch_status: "completed",
+    started_at: null,
+    finished_at: null,
+    platform: "Crunchyroll",
+    rewatch: false,
+    rating: null,
+    favorite: false,
+    notes: null
+};
+const demoWatchFile = createWatchRecordFileDescriptor(demoWatchFileInput);
 function App() {
     const [pathname, setPathname] = useState(() => window.location.pathname);
     const route = useMemo(() => resolveRoute(pathname), [pathname]);
@@ -114,7 +169,7 @@ function resolveRoute(pathname) {
             eyebrow: "Media Item",
             title: "Nova midia",
             description: "Defina a obra uma vez para que varios eventos de consumo possam referencia-la depois.",
-            content: (<GeneratorWorkspace entity="Media Item" path="data/media/{category}/{slug}.json" fields={["title", "category", "format", "status"]}/>)
+            content: (<GeneratorWorkspace entity="Media Item" file={demoMediaFile} path="data/media/{category}/{slug}.json" fields={["title", "category", "format", "status"]} outputDescription="Exemplo estatico para testar nome, caminho, preview, copia e download antes do formulario real." outputTitle="Preview de Media Item" value={demoMediaItem}/>)
         };
     }
     if (pathname === "/generate/watch-record") {
@@ -122,7 +177,7 @@ function resolveRoute(pathname) {
             eyebrow: "Watch Record",
             title: "Novo registro",
             description: "Registre o consumo de uma temporada, filme, especial, arco ou obra completa.",
-            content: (<GeneratorWorkspace entity="Watch Record" path="data/history/{year}/{slug}.json" fields={["media_id", "year", "unit", "watch_status"]}/>)
+            content: (<GeneratorWorkspace entity="Watch Record" file={demoWatchFile} path="data/history/{year}/{slug}.json" fields={["media_id", "year", "unit", "watch_status"]} outputDescription="Exemplo estatico para exercitar a regra de filename por unidade assistida." outputTitle="Preview de Watch Record" value={demoWatchRecord}/>)
         };
     }
     const yearMatch = /^\/library\/year\/([^/]+)$/.exec(pathname);
@@ -184,7 +239,7 @@ function LibraryWorkspace() {
       </article>
     </div>);
 }
-function GeneratorWorkspace({ entity, fields, path }) {
+function GeneratorWorkspace({ entity, file, fields, outputDescription, outputTitle, path, value }) {
     return (<div className="generator-board">
       <div className="file-card">
         <span className="file-card-label">Entidade</span>
@@ -198,9 +253,10 @@ function GeneratorWorkspace({ entity, fields, path }) {
         {fields.map((field) => (<span key={field}>{field}</span>))}
       </div>
       <p className="manual-note">
-        O formulario real entra nos proximos blocos. Esta tela fixa a estrutura visual e
-        reforca que salvar e commitar continuam manuais.
+        A demonstracao usa dados estaticos para testar a saida JSON. O formulario real
+        entra nos proximos blocos, e salvar ou commitar continua manual.
       </p>
+      <JsonOutputBlock description={outputDescription} file={file} title={outputTitle} value={value}/>
     </div>);
 }
 function RouteWorkspace({ label, path, value }) {

@@ -202,8 +202,17 @@ media-history-registry/
     |-- vite.config.js
     `-- src/
         |-- App.jsx
+        |-- components/
+        |   |-- CopyButton.jsx
+        |   |-- DownloadButton.jsx
+        |   |-- FileInfo.jsx
+        |   |-- JsonOutputBlock.jsx
+        |   `-- JsonPreview.jsx
         |-- main.jsx
-        `-- styles.css
+        |-- styles.css
+        `-- utils/
+            |-- jsonGeneration.js
+            `-- slugify.js
 ```
 
 > A estrutura vai crescer junto com o codigo. Tudo que for adicionado deve
