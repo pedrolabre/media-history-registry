@@ -169,6 +169,7 @@ Estrutura publica atual:
 media-history-registry/
 |-- .github/
 |   `-- workflows/
+|       |-- deploy-pages.yml
 |       `-- validate.yml
 |-- .gitignore
 |-- README.md
