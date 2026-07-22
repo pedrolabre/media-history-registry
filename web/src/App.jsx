@@ -1,16 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { isActive, navItems, resolveRoute, routeExamples } from "./routes";
+import {
+    isActive,
+    navItems,
+    readRoutePathFromLocation,
+    resolveRoute,
+    routeExamples,
+    toAppHref
+} from "./routes";
 
 function App() {
-    const [pathname, setPathname] = useState(() => window.location.pathname);
+    const [pathname, setPathname] = useState(
+        () => readRoutePathFromLocation(window.location) || "/"
+    );
     const route = useMemo(() => resolveRoute(pathname), [pathname]);
     const workspaceRef = useRef(null);
     const hasMountedRef = useRef(false);
 
     useEffect(() => {
-        const handlePopState = () => setPathname(window.location.pathname);
-        window.addEventListener("popstate", handlePopState);
-        return () => window.removeEventListener("popstate", handlePopState);
+        const handleHashChange = () => {
+            const nextPathname = readRoutePathFromLocation(window.location);
+            if (nextPathname) {
+                setPathname(nextPathname);
+            }
+        };
+        window.addEventListener("hashchange", handleHashChange);
+        return () => window.removeEventListener("hashchange", handleHashChange);
     }, []);
 
     useEffect(() => {
@@ -42,16 +56,26 @@ function App() {
         if (nextUrl.origin !== window.location.origin) {
             return;
         }
+        const nextPathname = readRoutePathFromLocation(nextUrl);
+        if (!nextPathname) {
+            return;
+        }
         event.preventDefault();
-        if (nextUrl.pathname !== window.location.pathname) {
-            window.history.pushState({}, "", nextUrl.pathname);
-            setPathname(nextUrl.pathname);
+        const nextHash = toAppHref(nextPathname);
+        if (nextPathname !== pathname || window.location.hash !== nextHash) {
+            window.location.hash = nextHash;
+            setPathname(nextPathname);
             window.scrollTo({ top: 0 });
         }
     }
 
+    function handleSkipLinkClick(event) {
+        event.preventDefault();
+        workspaceRef.current?.focus();
+    }
+
     return (<div className="app-shell" onClick={handleNavigation}>
-      <a className="skip-link" href="#workspace">
+      <a className="skip-link" href="#workspace" onClick={handleSkipLinkClick}>
         Pular para o workspace
       </a>
       <p className="sr-only" aria-live="polite">
@@ -67,7 +91,7 @@ function App() {
           </div>
 
           <nav className="file-tabs" aria-label="Navegacao principal">
-            {navItems.map((item) => (<a aria-current={isActive(pathname, item.href) ? "page" : undefined} className={isActive(pathname, item.href) ? "file-tab is-active" : "file-tab"} data-app-link href={item.href} key={item.href}>
+            {navItems.map((item) => (<a aria-current={isActive(pathname, item.href) ? "page" : undefined} className={isActive(pathname, item.href) ? "file-tab is-active" : "file-tab"} data-app-link href={toAppHref(item.href)} key={item.href}>
                 <span>{item.label}</span>
                 <small>{item.note}</small>
               </a>))}
@@ -94,7 +118,7 @@ function App() {
             <p className="panel-label">Mapa</p>
             <h2 id="drawer-title">Gavetas iniciais</h2>
             <div className="drawer-list">
-              {routeExamples.map((item) => (<a aria-current={pathname === item.href ? "page" : undefined} className="drawer-row" data-app-link href={item.href} key={item.href}>
+              {routeExamples.map((item) => (<a aria-current={pathname === item.href ? "page" : undefined} className="drawer-row" data-app-link href={toAppHref(item.href)} key={item.href}>
                   <span>{item.label}</span>
                   <code>{item.value}</code>
                 </a>))}

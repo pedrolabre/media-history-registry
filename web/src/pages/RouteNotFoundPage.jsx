@@ -9,7 +9,7 @@ export function RouteNotFoundPage() {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/library">
+        <a className="inline-action" data-app-link href="#/library">
           Abrir biblioteca
         </a>
       </div>

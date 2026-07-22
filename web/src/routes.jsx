@@ -19,6 +19,21 @@ export const routeExamples = [
     { href: "/library/category/anime", label: "Categoria", value: "anime" }
 ];
 
+export function readRoutePathFromLocation(location) {
+    const hash = String(location.hash || "");
+    if (hash.startsWith("#/")) {
+        return normalizeRoutePath(hash.slice(1));
+    }
+    if (hash && hash !== "#") {
+        return null;
+    }
+    return getRoutePathFromPathname(location.pathname);
+}
+
+export function toAppHref(pathname) {
+    return `#${normalizeRoutePath(pathname)}`;
+}
+
 export function resolveRoute(pathname) {
     if (pathname === "/" || pathname === "/library") {
         return {
@@ -87,6 +102,36 @@ export function isActive(pathname, href) {
         return pathname === "/" || pathname.startsWith("/library");
     }
     return pathname === href;
+}
+
+function getRoutePathFromPathname(pathname) {
+    const base = normalizeBasePath(import.meta.env.BASE_URL);
+    const baseWithoutTrailingSlash = base === "/" ? "" : base.replace(/\/$/, "");
+    const normalizedPathname = normalizeRoutePath(pathname);
+
+    if (baseWithoutTrailingSlash && normalizedPathname === baseWithoutTrailingSlash) {
+        return "/";
+    }
+    if (baseWithoutTrailingSlash && normalizedPathname.startsWith(`${baseWithoutTrailingSlash}/`)) {
+        return normalizeRoutePath(normalizedPathname.slice(baseWithoutTrailingSlash.length));
+    }
+
+    return normalizedPathname;
+}
+
+function normalizeBasePath(value) {
+    const base = String(value || "/");
+    if (!base.startsWith("/")) {
+        return `/${base}`;
+    }
+    return base;
+}
+
+function normalizeRoutePath(value) {
+    const [routePart] = String(value || "/").split(/[?#]/);
+    const route = routePart.startsWith("/") ? routePart : `/${routePart}`;
+    const normalized = route.replace(/\/{2,}/g, "/").replace(/\/+$/, "");
+    return normalized || "/";
 }
 
 function decodeRouteValue(value) {

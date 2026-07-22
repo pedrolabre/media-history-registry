@@ -15,10 +15,10 @@ export function MediaNotFoundState({ mediaId }) {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/library">
+        <a className="inline-action" data-app-link href="#/library">
           Ver biblioteca completa
         </a>
-        <a className="inline-action" data-app-link href="/generate/media">
+        <a className="inline-action" data-app-link href="#/generate/media">
           Gerar Media Item
         </a>
       </div>
@@ -49,7 +49,7 @@ export function MediaNoRecordsState({ compact = false, mediaItem }) {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/generate/watch-record">
+        <a className="inline-action" data-app-link href="#/generate/watch-record">
           Gerar Watch Record
         </a>
       </div>
@@ -71,10 +71,10 @@ export function CategoryNoMediaState({ category }) {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/library">
+        <a className="inline-action" data-app-link href="#/library">
           Ver biblioteca completa
         </a>
-        <a className="inline-action" data-app-link href="/generate/media">
+        <a className="inline-action" data-app-link href="#/generate/media">
           Gerar Media Item
         </a>
       </div>
@@ -99,7 +99,7 @@ export function CategoryNoRecordsState({ categoryGroup }) {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/generate/watch-record">
+        <a className="inline-action" data-app-link href="#/generate/watch-record">
           Gerar Watch Record
         </a>
       </div>
@@ -118,10 +118,10 @@ export function YearEmptyState({ hasLibraryRecords, year }) {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/library">
+        <a className="inline-action" data-app-link href="#/library">
           Ver biblioteca completa
         </a>
-        <a className="inline-action" data-app-link href="/generate/watch-record">
+        <a className="inline-action" data-app-link href="#/generate/watch-record">
           Gerar Watch Record
         </a>
       </div>
@@ -166,7 +166,7 @@ export function LibraryEmptyState() {
         </p>
       </div>
       <div className="loader-state-actions">
-        <a className="inline-action" data-app-link href="/generate/watch-record">
+        <a className="inline-action" data-app-link href="#/generate/watch-record">
           Gerar Watch Record
         </a>
       </div>
