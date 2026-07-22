@@ -1,8 +1,15 @@
 import { useMemo, useState } from "react";
 import { JsonOutputBlock } from "./JsonOutputBlock";
-import { WATCH_STATUS_OPTIONS, WATCH_UNIT_OPTIONS, buildWatchRecordGeneratorOutput, createInitialWatchRecordFormState } from "../utils/watchRecordGenerator";
+import {
+    WATCH_STATUS_OPTIONS,
+    WATCH_UNIT_OPTIONS,
+    buildWatchRecordGeneratorOutput,
+    createInitialWatchRecordFormState
+} from "../utils/watchRecordGenerator";
+
 const REQUIRED_FIELDS = new Set([
-    "mediaId",
+    "selectedMediaId",
+    "manualMediaId",
     "year",
     "unitType",
     "seasonNumber",
@@ -10,32 +17,112 @@ const REQUIRED_FIELDS = new Set([
     "arcName",
     "watchStatus"
 ]);
-export function WatchRecordGenerator() {
-    const [form, setForm] = useState(createInitialWatchRecordFormState);
+
+const MEDIA_ID_MODE_OPTIONS = [
+    {
+        value: "existing",
+        label: "Selecionar midia",
+        description: "Usa o id de um Media Item ja carregado."
+    },
+    {
+        value: "manual",
+        label: "Informar manualmente",
+        description: "Mantem o fallback para uma midia ainda nao commitada."
+    }
+];
+
+export function WatchRecordGenerator({ mediaItems = [] }) {
+    const startsWithExistingMedia = Array.isArray(mediaItems) && mediaItems.length > 0;
+    const [form, setForm] = useState(() => ({
+        ...createInitialWatchRecordFormState(),
+        mediaIdMode: startsWithExistingMedia ? "existing" : "manual"
+    }));
     const [touched, setTouched] = useState({});
+    const [mediaSearch, setMediaSearch] = useState("");
+    const selectorItems = useMemo(() => normalizeMediaSelectorItems(mediaItems), [mediaItems]);
+    const selectedMedia = useMemo(
+        () => selectorItems.find((mediaItem) => mediaItem.id === form.selectedMediaId) || null,
+        [form.selectedMediaId, selectorItems]
+    );
+    const filteredMediaItems = useMemo(
+        () => filterMediaSelectorItems(selectorItems, mediaSearch, selectedMedia),
+        [mediaSearch, selectedMedia, selectorItems]
+    );
+    const unitSuggestion = getUnitSuggestion(selectedMedia);
     const result = useMemo(() => buildWatchRecordGeneratorOutput(form), [form]);
+
     function updateField(field, value) {
         setForm((current) => ({
             ...current,
             [field]: value
         }));
     }
+
     function updateBooleanField(field, value) {
         setForm((current) => ({
             ...current,
             [field]: value
         }));
     }
+
+    function updateUnitType(value) {
+        setTouched((current) => ({
+            ...current,
+            unitType: true
+        }));
+        updateField("unitType", value);
+    }
+
+    function updateMediaIdMode(value) {
+        setTouched((current) => ({
+            ...current,
+            selectedMediaId: false,
+            manualMediaId: false
+        }));
+        setForm((current) => ({
+            ...current,
+            mediaIdMode: value,
+            selectedMediaId: value === "manual" ? "" : current.selectedMediaId,
+            manualMediaId: value === "existing" ? "" : current.manualMediaId
+        }));
+
+        if (value === "manual") {
+            setMediaSearch("");
+        }
+    }
+
+    function updateSelectedMediaId(value) {
+        const nextMedia = selectorItems.find((mediaItem) => mediaItem.id === value) || null;
+        const nextSuggestion = getUnitSuggestion(nextMedia);
+
+        setForm((current) => ({
+            ...current,
+            selectedMediaId: value,
+            manualMediaId: "",
+            unitType: nextSuggestion && !touched.unitType ? nextSuggestion.value : current.unitType
+        }));
+    }
+
+    function updateManualMediaId(value) {
+        setForm((current) => ({
+            ...current,
+            selectedMediaId: "",
+            manualMediaId: value
+        }));
+    }
+
     function markTouched(field) {
         setTouched((current) => ({
             ...current,
             [field]: true
         }));
     }
+
     function handleSubmit(event) {
         event.preventDefault();
         setTouched({
-            mediaId: true,
+            selectedMediaId: true,
+            manualMediaId: true,
             year: true,
             unitType: true,
             seasonNumber: true,
@@ -48,8 +135,12 @@ export function WatchRecordGenerator() {
             rating: true
         });
     }
+
     const filePath = result.ok ? result.file.repositoryPath : "data/history/{year}/{slug}.json";
     const previewErrorCount = Object.keys(result.errors).length;
+    const resolvedMediaId =
+        form.mediaIdMode === "existing" ? form.selectedMediaId : form.manualMediaId;
+
     return (<div className="media-generator watch-record-generator">
       <div className="generated-summary" aria-label="Resumo do Watch Record" role="group">
         <div className="file-card">
@@ -70,10 +161,11 @@ export function WatchRecordGenerator() {
         <fieldset className="form-section">
           <legend>Registro</legend>
           <div className="form-grid">
-            <TextField error={getVisibleError("mediaId", result.errors, touched, form.mediaId)} label="Media ID" name="mediaId" onBlur={() => markTouched("mediaId")} onChange={(value) => updateField("mediaId", value)} required value={form.mediaId}/>
+            <MediaIdSelector error={result.errors} filteredMediaItems={filteredMediaItems} hasExistingMedia={selectorItems.length > 0} manualMediaId={form.manualMediaId} mediaSearch={mediaSearch} mode={form.mediaIdMode} onManualMediaIdChange={updateManualMediaId} onMediaSearchChange={setMediaSearch} onModeChange={updateMediaIdMode} onSelectedMediaIdChange={updateSelectedMediaId} onTouched={markTouched} resolvedMediaId={resolvedMediaId} selectedMedia={selectedMedia} selectedMediaId={form.selectedMediaId} touched={touched}/>
             <TextField error={getVisibleError("year", result.errors, touched, form.year)} inputMode="numeric" label="Ano" name="year" onBlur={() => markTouched("year")} onChange={(value) => updateField("year", value)} required value={form.year}/>
-            <SelectField error={getVisibleError("unitType", result.errors, touched, form.unitType)} label="Tipo de unidade" name="unitType" onBlur={() => markTouched("unitType")} onChange={(value) => updateField("unitType", value)} options={WATCH_UNIT_OPTIONS} required value={form.unitType}/>
+            <SelectField error={getVisibleError("unitType", result.errors, touched, form.unitType)} label="Tipo de unidade" name="unitType" onBlur={() => markTouched("unitType")} onChange={updateUnitType} options={WATCH_UNIT_OPTIONS} required value={form.unitType}/>
             <SelectField error={getVisibleError("watchStatus", result.errors, touched, form.watchStatus)} label="Status pessoal" name="watchStatus" onBlur={() => markTouched("watchStatus")} onChange={(value) => updateField("watchStatus", value)} options={WATCH_STATUS_OPTIONS} required value={form.watchStatus}/>
+            {unitSuggestion ? <UnitSuggestion selectedUnitType={form.unitType} suggestion={unitSuggestion}/> : null}
           </div>
         </fieldset>
 
@@ -140,6 +232,95 @@ export function WatchRecordGenerator() {
         </article>)}
     </div>);
 }
+
+function MediaIdSelector({
+    error,
+    filteredMediaItems,
+    hasExistingMedia,
+    manualMediaId,
+    mediaSearch,
+    mode,
+    onManualMediaIdChange,
+    onMediaSearchChange,
+    onModeChange,
+    onSelectedMediaIdChange,
+    onTouched,
+    resolvedMediaId,
+    selectedMedia,
+    selectedMediaId,
+    touched
+}) {
+    const selectedMediaError = getVisibleError("selectedMediaId", error, touched, selectedMediaId);
+    const manualMediaError = getVisibleError("manualMediaId", error, touched, manualMediaId);
+    const mediaOptions = filteredMediaItems.map((mediaItem) => ({
+        value: mediaItem.id,
+        label: `${mediaItem.title} - ${mediaItem.id}`
+    }));
+
+    return (<div className="form-field form-field-wide media-id-selector">
+      <div className="media-id-selector-header">
+        <span className="form-label-text" id="media-id-source-label">
+          Media ID <span aria-hidden="true">*</span>
+        </span>
+        <code>{resolvedMediaId || "sem media_id"}</code>
+      </div>
+
+      <div aria-describedby={error.mediaIdMode ? "mediaIdMode-error" : undefined} aria-labelledby="media-id-source-label" className="media-id-mode-grid" role="radiogroup">
+        {MEDIA_ID_MODE_OPTIONS.map((option) => {
+            const disabled = option.value === "existing" && !hasExistingMedia;
+
+            return (<label className={disabled ? "media-id-mode-option is-disabled" : "media-id-mode-option"} key={option.value}>
+              <input checked={mode === option.value} disabled={disabled} name="mediaIdMode" onChange={() => onModeChange(option.value)} type="radio" value={option.value}/>
+              <span>{option.label}</span>
+              <small>{option.description}</small>
+            </label>);
+        })}
+      </div>
+      <FieldError id="mediaIdMode-error" message={error.mediaIdMode}/>
+
+      {mode === "existing" ? (<div className="media-id-source-panel">
+          <TextField label="Buscar midia" name="mediaSearch" onBlur={() => undefined} onChange={onMediaSearchChange} value={mediaSearch}/>
+          <SelectField error={selectedMediaError} label="Midia existente" name="selectedMediaId" onBlur={() => onTouched("selectedMediaId")} onChange={onSelectedMediaIdChange} options={mediaOptions} required value={selectedMediaId}/>
+          {filteredMediaItems.length === 0 ? (<p className="selector-empty-state" role="status">
+              Nenhuma midia encontrada para esse filtro.
+            </p>) : null}
+          {selectedMedia ? <SelectedMediaSummary mediaItem={selectedMedia}/> : null}
+        </div>) : (<div className="media-id-source-panel">
+          <TextField error={manualMediaError} label="Media ID manual" name="manualMediaId" onBlur={() => onTouched("manualMediaId")} onChange={onManualMediaIdChange} required value={manualMediaId}/>
+        </div>)}
+    </div>);
+}
+
+function SelectedMediaSummary({ mediaItem }) {
+    return (<dl aria-label="Midia selecionada" className="selected-media-summary">
+      <div>
+        <dt>Titulo</dt>
+        <dd>{mediaItem.title}</dd>
+      </div>
+      <div>
+        <dt>ID usado</dt>
+        <dd><code>{mediaItem.id}</code></dd>
+      </div>
+      <div>
+        <dt>Formato</dt>
+        <dd>{mediaItem.format}</dd>
+      </div>
+      <div>
+        <dt>Categoria</dt>
+        <dd>{mediaItem.category}</dd>
+      </div>
+    </dl>);
+}
+
+function UnitSuggestion({ selectedUnitType, suggestion }) {
+    const status = selectedUnitType === suggestion.value ? "aplicada" : "disponivel";
+
+    return (<p className="unit-suggestion">
+      Sugestao da midia: <strong>{suggestion.label}</strong> ({status}). O
+      tipo de unidade continua editavel para excecoes validas.
+    </p>);
+}
+
 function TextField({ error, inputMode, label, name, onBlur, onChange, required, type = "text", value }) {
     return (<div className="form-field">
       <label htmlFor={name}>
@@ -150,6 +331,7 @@ function TextField({ error, inputMode, label, name, onBlur, onChange, required, 
       <FieldError id={`${name}-error`} message={error}/>
     </div>);
 }
+
 function SelectField({ error, label, name, onBlur, onChange, options, required, value }) {
     return (<div className="form-field">
       <label htmlFor={name}>
@@ -165,6 +347,7 @@ function SelectField({ error, label, name, onBlur, onChange, options, required, 
       <FieldError id={`${name}-error`} message={error}/>
     </div>);
 }
+
 function CheckboxField({ checked, label, name, onChange }) {
     return (<div className="form-field checkbox-field">
       <label htmlFor={name}>
@@ -173,12 +356,14 @@ function CheckboxField({ checked, label, name, onChange }) {
       </label>
     </div>);
 }
+
 function TextAreaField({ label, name, onChange, value }) {
     return (<div className="form-field form-field-wide">
       <label htmlFor={name}>{label}</label>
       <textarea id={name} name={name} onChange={(event) => onChange(event.target.value)} rows={4} value={value}/>
     </div>);
 }
+
 function FieldError({ id, message }) {
     if (!message) {
         return <span className="field-error field-error-empty" id={id}/>;
@@ -187,13 +372,108 @@ function FieldError({ id, message }) {
       {message}
     </span>);
 }
+
 function getVisibleError(field, errors, touched, value) {
     const error = errors[field];
     if (!error) {
         return undefined;
     }
-    if (REQUIRED_FIELDS.has(field) || touched[field] || value.trim()) {
+    if (REQUIRED_FIELDS.has(field) || touched[field] || normalizeInput(value)) {
         return error;
     }
     return undefined;
+}
+
+function normalizeMediaSelectorItems(mediaItems) {
+    return (Array.isArray(mediaItems) ? mediaItems : [])
+        .filter((mediaItem) => typeof mediaItem?.id === "string" && mediaItem.id.trim())
+        .map((mediaItem) => ({
+            id: mediaItem.id.trim(),
+            title: normalizeInput(mediaItem.title) || mediaItem.id.trim(),
+            originalTitle: normalizeInput(mediaItem.originalTitle),
+            category: normalizeInput(mediaItem.category),
+            format: normalizeInput(mediaItem.format),
+            subcategories: Array.isArray(mediaItem.subcategories)
+                ? mediaItem.subcategories.filter(Boolean).map(String)
+                : [],
+            originPath: normalizeInput(mediaItem.origin?.path)
+        }))
+        .sort(compareMediaSelectorItems);
+}
+
+function filterMediaSelectorItems(mediaItems, search, selectedMedia) {
+    const query = normalizeSearch(search);
+    const matches = query
+        ? mediaItems.filter((mediaItem) => mediaItemMatchesQuery(mediaItem, query))
+        : mediaItems;
+
+    if (selectedMedia && !matches.some((mediaItem) => mediaItem.id === selectedMedia.id)) {
+        return [selectedMedia, ...matches];
+    }
+
+    return matches;
+}
+
+function mediaItemMatchesQuery(mediaItem, query) {
+    return [
+        mediaItem.id,
+        mediaItem.title,
+        mediaItem.originalTitle,
+        mediaItem.category,
+        mediaItem.format,
+        ...mediaItem.subcategories
+    ].some((value) => normalizeSearch(value).includes(query));
+}
+
+function compareMediaSelectorItems(left, right) {
+    return (
+        left.title.localeCompare(right.title) ||
+        left.id.localeCompare(right.id) ||
+        left.originPath.localeCompare(right.originPath)
+    );
+}
+
+function getUnitSuggestion(mediaItem) {
+    const suggestedType = getSuggestedUnitType(mediaItem);
+
+    if (!suggestedType) {
+        return null;
+    }
+
+    return WATCH_UNIT_OPTIONS.find((option) => option.value === suggestedType) || null;
+}
+
+function getSuggestedUnitType(mediaItem) {
+    if (!mediaItem) {
+        return "";
+    }
+
+    if (mediaItem.format === "movie") {
+        return "movie";
+    }
+
+    if (mediaItem.format === "special") {
+        return "special";
+    }
+
+    if (mediaItem.format === "short") {
+        return "full_work";
+    }
+
+    if (mediaItem.format === "series") {
+        return mediaItem.subcategories.includes("limited-series") ? "limited_season" : "season";
+    }
+
+    return "";
+}
+
+function normalizeInput(value) {
+    return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeSearch(value) {
+    return normalizeInput(value)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
 }

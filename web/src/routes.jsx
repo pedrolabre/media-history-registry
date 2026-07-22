@@ -41,7 +41,7 @@ export function resolveRoute(pathname) {
             eyebrow: "Watch Record",
             title: "Novo registro",
             description: "Registre o consumo de uma temporada, filme, especial, arco ou obra completa.",
-            content: <WatchRecordGenerator />
+            content: <WatchRecordGenerator mediaItems={staticLibraryData.normalized.mediaItems}/>
         };
     }
     const yearMatch = /^\/library\/year\/([^/]+)$/.exec(pathname);

@@ -21,9 +21,12 @@ export const WATCH_STATUS_OPTIONS = [
 ];
 const UNIT_VALUES = WATCH_UNIT_OPTIONS.map((option) => option.value);
 const WATCH_STATUS_VALUES = WATCH_STATUS_OPTIONS.map((option) => option.value);
+const MEDIA_ID_MODE_VALUES = ["existing", "manual"];
 export function createInitialWatchRecordFormState() {
     return {
-        mediaId: "",
+        mediaIdMode: "existing",
+        selectedMediaId: "",
+        manualMediaId: "",
         year: String(new Date().getFullYear()),
         unitType: "season",
         seasonNumber: "",
@@ -42,7 +45,7 @@ export function createInitialWatchRecordFormState() {
 }
 export function buildWatchRecordGeneratorOutput(form) {
     const errors = {};
-    const mediaId = parseMediaId(form.mediaId, errors);
+    const mediaId = parseMediaId(form, errors);
     const year = parseRequiredYear(form.year, errors);
     const unit = parseUnit(form, errors);
     const watchStatus = parseWatchStatus(form.watchStatus, errors);
@@ -92,20 +95,43 @@ export function buildWatchRecordGeneratorOutput(form) {
         errors
     };
 }
-function parseMediaId(input, errors) {
-    const value = input.trim();
+function parseMediaId(form, errors) {
+    const mode = parseMediaIdMode(form, errors);
+    const fallbackField = hasOwn(form, "manualMediaId") ? "manualMediaId" : "mediaId";
+    const field = mode === "existing" ? "selectedMediaId" : fallbackField;
+    const rawInput = mode === "existing" ? form.selectedMediaId : form[fallbackField];
+    const value = normalizeInput(rawInput);
+
     if (!value) {
-        errors.mediaId = "Informe o media_id.";
+        errors[field] =
+            mode === "existing"
+                ? "Selecione uma midia existente ou use o modo manual."
+                : "Informe o media_id manual.";
         return null;
     }
     if (!isSlug(value)) {
-        errors.mediaId = "Use um slug kebab-case, como spy-family.";
+        errors[field] = "Use um slug kebab-case, como spy-family.";
         return null;
     }
     return value;
 }
+function parseMediaIdMode(form, errors) {
+    if (!hasOwn(form, "mediaIdMode")) {
+        return "manual";
+    }
+    const input = form.mediaIdMode;
+
+    if (!input) {
+        return "existing";
+    }
+    if (!isKnownValue(input, MEDIA_ID_MODE_VALUES)) {
+        errors.mediaIdMode = "Selecione uma origem valida para o media_id.";
+        return "existing";
+    }
+    return input;
+}
 function parseRequiredYear(input, errors) {
-    const value = input.trim();
+    const value = normalizeInput(input);
     if (!value) {
         errors.year = "Informe o ano.";
         return null;
@@ -200,7 +226,7 @@ function parseWatchStatus(input, errors) {
     return input;
 }
 function parseRequiredPositiveInteger(input, field, message, errors) {
-    const value = input.trim();
+    const value = normalizeInput(input);
     if (!value || !/^[0-9]+$/.test(value)) {
         errors[field] = message;
         return null;
@@ -213,7 +239,7 @@ function parseRequiredPositiveInteger(input, field, message, errors) {
     return parsed;
 }
 function parseOptionalPositiveInteger(input, field, message, errors) {
-    const value = input.trim();
+    const value = normalizeInput(input);
     if (!value) {
         return null;
     }
@@ -229,7 +255,7 @@ function parseOptionalPositiveInteger(input, field, message, errors) {
     return parsed;
 }
 function parseOptionalDate(input, field, errors) {
-    const value = input.trim();
+    const value = normalizeInput(input);
     if (!value) {
         return null;
     }
@@ -240,7 +266,7 @@ function parseOptionalDate(input, field, errors) {
     return value;
 }
 function parseOptionalRating(input, errors) {
-    const value = input.trim();
+    const value = normalizeInput(input);
     if (!value) {
         return null;
     }
@@ -256,7 +282,7 @@ function parseOptionalRating(input, errors) {
     return rating;
 }
 function optionalString(input) {
-    const value = input.trim();
+    const value = normalizeInput(input);
     return value ? value : null;
 }
 function isKnownValue(value, values) {
@@ -264,4 +290,10 @@ function isKnownValue(value, values) {
 }
 function hasErrors(errors) {
     return Object.keys(errors).length > 0;
+}
+function normalizeInput(input) {
+    return typeof input === "string" ? input.trim() : "";
+}
+function hasOwn(value, key) {
+    return Object.prototype.hasOwnProperty.call(value, key);
 }
