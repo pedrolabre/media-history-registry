@@ -2,12 +2,13 @@ import { buildYearGroups } from "../data-loader";
 import { LibraryControls } from "../components/library/LibraryControls";
 import { FilterNoResultsState, LoaderErrorState, YearEmptyState } from "../components/library/LibraryStates";
 import { LibrarySummary } from "../components/library/LibrarySummary";
-import { YearLibrary } from "../components/library/RecordList";
+import { OrphanWatchRecordDiagnostics, YearLibrary } from "../components/library/RecordList";
 import { useLibraryExplorer } from "../components/library/useLibraryExplorer";
 
 export function YearLibraryPage({ data, year }) {
     const yearGroup = findYearGroup(data.normalized.yearGroups, year);
     const explorer = useLibraryExplorer(yearGroup?.records || []);
+    const orphanRecords = yearGroup?.records.filter((record) => record.relationshipStatus === "orphan") || [];
     const yearGroups = buildYearGroups(explorer.records, {
         preserveRecordOrder: true,
         yearDirection: explorer.sort.field === "year" ? explorer.sort.direction : "desc"
@@ -18,6 +19,8 @@ export function YearLibraryPage({ data, year }) {
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
       {yearGroup ? <LibraryControls explorer={explorer}/> : null}
+
+      {yearGroup ? (<OrphanWatchRecordDiagnostics records={orphanRecords} scopeLabel={`ano ${year}`}/>) : null}
 
       {yearGroup && explorer.filteredCount === 0 ? <FilterNoResultsState explorer={explorer}/> : null}
 

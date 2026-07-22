@@ -31,6 +31,39 @@ export function YearLibrary({ isSingleYear = false, yearGroups }) {
     </section>);
 }
 
+export function OrphanWatchRecordDiagnostics({ records, scopeLabel = "snapshot carregado" }) {
+    const orphanRecords = (Array.isArray(records) ? records : []).filter(
+        (record) => record.relationshipStatus === "orphan"
+    );
+
+    if (orphanRecords.length === 0) {
+        return null;
+    }
+
+    const headingId = `orphan-diagnostics-${slugifyForId(scopeLabel)}`;
+    return (<section className="orphan-diagnostics" aria-labelledby={headingId}>
+      <header className="orphan-diagnostics-header">
+        <div>
+          <span className="file-card-label">Diagnostico</span>
+          <h2 id={headingId}>Watch Records orfaos</h2>
+          <p>
+            Estes registros existem no {scopeLabel}, mas apontam para um{" "}
+            <code>media_id</code> sem Media Item correspondente. A validacao
+            local ou CI pode falhar nessa relacao invalida; a UI apenas ajuda a
+            investigar o snapshot carregado.
+          </p>
+        </div>
+        <strong>
+          {orphanRecords.length} {orphanRecords.length === 1 ? "orfao" : "orfaos"}
+        </strong>
+      </header>
+
+      <ul className="orphan-record-list orphan-diagnostics-list">
+        {orphanRecords.map((record) => (<OrphanDiagnosticCard key={`${record.origin?.path || record.id}-diagnostic`} record={record}/>))}
+      </ul>
+    </section>);
+}
+
 function YearGroup({ group }) {
     const headingId = `library-year-${group.year}`;
     return (<section className="year-group" aria-labelledby={headingId}>
@@ -73,10 +106,10 @@ function YearRecordCard({ record }) {
       </dl>
 
       {isOrphan ? (<p className="year-record-recovery">
-          Adicione um Media Item com id <code>{record.mediaId}</code> em{" "}
-          <code>data/media</code> e faca o commit manual para ligar este Watch
-          Record no proximo build. O JSON original do registro nao precisa
-          mudar.
+          Registro orfao: confira o diagnostico do recorte para ver path de
+          origem, <code>media_id</code>, ano e unidade. Acao esperada:
+          adicionar ou corrigir o Media Item correspondente e fazer o commit
+          manual.
         </p>) : null}
     </li>);
 }
@@ -86,4 +119,67 @@ export function RecordFact({ label, value }) {
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>);
+}
+
+function OrphanDiagnosticCard({ record }) {
+    const diagnostic = record.orphanDiagnostic || buildFallbackDiagnostic(record);
+    return (<li className="orphan-diagnostic-card">
+      <div className="orphan-diagnostic-copy">
+        <strong>Media Item ausente</strong>
+        <span>
+          O Watch Record referencia <code>{diagnostic.missingMediaId}</code>,
+          mas esse id nao foi encontrado em <code>data/media</code>.
+        </span>
+      </div>
+
+      <dl className="source-ledger orphan-diagnostic-grid">
+        <RecordFact label="ID do registro" value={diagnostic.recordId}/>
+        <RecordFact label="media_id" value={diagnostic.missingMediaId}/>
+        <RecordFact label="Path de origem" value={diagnostic.sourcePath}/>
+        <RecordFact label="Ano do registro" value={diagnostic.recordYear}/>
+        <RecordFact label="Ano do path" value={diagnostic.sourceYear}/>
+        <RecordFact label="Unidade derivada" value={diagnostic.unitLabel}/>
+        <RecordFact label="Unidade bruta" value={diagnostic.rawUnit}/>
+      </dl>
+
+      <p className="orphan-diagnostic-action">
+        <strong>Acao esperada</strong>
+        {diagnostic.expectedAction} A aplicacao nao altera JSONs nem grava em{" "}
+        <code>data/</code>; corrija manualmente, rode a validacao local e faca
+        o commit quando o relacionamento estiver valido.
+      </p>
+    </li>);
+}
+
+function buildFallbackDiagnostic(record) {
+    return {
+        recordId: record.id || "id nao informado",
+        missingMediaId: record.mediaId || "media_id ausente",
+        sourcePath: record.origin?.path || "path nao informado",
+        sourceYear: record.origin?.year || "ano do path nao informado",
+        recordYear: record.year || "ano nao informado",
+        unitLabel: record.unitLabel || "UN",
+        rawUnit: describeRawUnit(record.unit),
+        expectedAction:
+            `Adicionar um Media Item com id "${record.mediaId || "media_id ausente"}" em data/media ou corrigir o media_id deste Watch Record.`
+    };
+}
+
+function describeRawUnit(unit) {
+    if (!unit || typeof unit !== "object" || Array.isArray(unit)) {
+        return "unidade nao informada";
+    }
+
+    const parts = Object.entries(unit)
+        .filter(([, value]) => value !== null && value !== undefined && value !== "")
+        .map(([key, value]) => `${key}: ${String(value)}`);
+
+    return parts.length > 0 ? parts.join(", ") : "unidade vazia";
+}
+
+function slugifyForId(value) {
+    return String(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "snapshot";
 }

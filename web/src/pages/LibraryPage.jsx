@@ -2,7 +2,7 @@ import { buildYearGroups } from "../data-loader";
 import { LibraryControls } from "../components/library/LibraryControls";
 import { LibraryEmptyState, FilterNoResultsState, LoaderErrorState } from "../components/library/LibraryStates";
 import { LibrarySummary } from "../components/library/LibrarySummary";
-import { YearLibrary } from "../components/library/RecordList";
+import { OrphanWatchRecordDiagnostics, YearLibrary } from "../components/library/RecordList";
 import { useLibraryExplorer } from "../components/library/useLibraryExplorer";
 
 export function LibraryPage({ data }) {
@@ -18,6 +18,8 @@ export function LibraryPage({ data }) {
       {data.status === "error" ? <LoaderErrorState data={data}/> : null}
 
       {isEmpty ? <LibraryEmptyState /> : null}
+
+      <OrphanWatchRecordDiagnostics records={data.normalized.orphanWatchRecords}/>
 
       {!isEmpty ? <LibraryControls explorer={explorer}/> : null}
 

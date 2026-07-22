@@ -1391,6 +1391,94 @@ p {
   color: var(--color-board);
 }
 
+.orphan-diagnostics {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-coral);
+  box-shadow: var(--shadow-soft);
+}
+
+.orphan-diagnostics-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.orphan-diagnostics-header > div {
+  min-width: 0;
+}
+
+.orphan-diagnostics-header h2,
+.orphan-diagnostics-header p {
+  margin-bottom: 0;
+}
+
+.orphan-diagnostics-header p {
+  max-width: 72ch;
+  margin-top: var(--space-2);
+  color: var(--color-ink);
+  font-weight: 850;
+}
+
+.orphan-diagnostics-header strong {
+  min-width: 84px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--color-dark);
+  box-shadow: 4px 4px 0 var(--color-lime);
+  color: var(--color-board);
+  font-family: var(--font-display);
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.orphan-diagnostics-list .orphan-diagnostic-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  align-items: stretch;
+  padding: var(--space-3);
+}
+
+.orphan-diagnostic-copy span {
+  color: var(--color-ink);
+  font-weight: 850;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.orphan-diagnostic-copy code,
+.orphan-diagnostic-action code {
+  justify-self: start;
+}
+
+.orphan-diagnostic-grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.orphan-diagnostic-action {
+  margin: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: var(--color-lime);
+  color: var(--color-ink);
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.orphan-diagnostic-action strong {
+  display: block;
+  margin-bottom: var(--space-1);
+}
+
 .generator-board,
 .route-board {
   display: grid;
@@ -2109,6 +2197,7 @@ p {
   .category-header,
   .category-media-heading,
   .linked-records-header,
+  .orphan-diagnostics-header,
   .watch-timeline-header,
   .watch-timeline-card-header,
   .json-output-header {

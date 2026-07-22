@@ -39,11 +39,14 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
 
     const normalizedWatchRecords = watchRecords.map((entry) => {
         const watchRecord = entry.value;
-        const mediaItem = mediaById.get(watchRecord.media_id) || null;
+        const mediaId = normalizeOptionalText(watchRecord.media_id) || "media_id ausente";
+        const mediaItem = mediaById.get(mediaId) || null;
+        const relationshipStatus = mediaItem ? "linked" : "orphan";
+        const unitLabel = deriveUnitLabel(watchRecord.unit);
         const normalizedRecord = {
             id: watchRecord.id,
-            mediaId: watchRecord.media_id,
-            title: mediaItem?.title || watchRecord.media_id,
+            mediaId,
+            title: mediaItem?.title || mediaId,
             year: watchRecord.year,
             category: mediaItem?.category || null,
             subcategories: mediaItem?.subcategories || [],
@@ -58,9 +61,13 @@ export function buildNormalizedLibrary({ mediaItems, watchRecords }) {
             favorite: watchRecord.favorite === true,
             notes: normalizeOptionalText(watchRecord.notes),
             unit: watchRecord.unit,
-            unitLabel: deriveUnitLabel(watchRecord.unit),
-            relationshipStatus: mediaItem ? "linked" : "orphan",
+            unitLabel,
+            relationshipStatus,
             media: mediaItem ? summarizeMediaItem(mediaItem) : null,
+            orphanDiagnostic:
+                relationshipStatus === "orphan"
+                    ? buildOrphanDiagnostic({ entry, unitLabel, watchRecord })
+                    : null,
             origin: entry.origin,
             value: watchRecord
         };
@@ -129,6 +136,38 @@ function summarizeMediaItem(mediaItem) {
         notes: mediaItem.notes,
         origin: mediaItem.origin
     };
+}
+
+function buildOrphanDiagnostic({ entry, unitLabel, watchRecord }) {
+    const missingMediaId = normalizeOptionalText(watchRecord.media_id) || "media_id ausente";
+    const sourcePath = normalizeOptionalText(entry.origin?.path) || "path nao informado";
+    const recordId = normalizeOptionalText(watchRecord.id) || entry.origin?.fileId || "id nao informado";
+    const recordYear = Number.isInteger(watchRecord.year) ? watchRecord.year : "ano nao informado";
+    const sourceYear = Number.isInteger(entry.origin?.year) ? entry.origin.year : "ano do path nao informado";
+
+    return {
+        recordId,
+        missingMediaId,
+        sourcePath,
+        sourceYear,
+        recordYear,
+        unitLabel,
+        rawUnit: describeRawUnit(watchRecord.unit),
+        expectedAction:
+            `Adicionar um Media Item com id "${missingMediaId}" em data/media ou corrigir o media_id deste Watch Record.`
+    };
+}
+
+function describeRawUnit(unit) {
+    if (!unit || typeof unit !== "object" || Array.isArray(unit)) {
+        return "unidade nao informada";
+    }
+
+    const parts = Object.entries(unit)
+        .filter(([, value]) => value !== null && value !== undefined && value !== "")
+        .map(([key, value]) => `${key}: ${String(value)}`);
+
+    return parts.length > 0 ? parts.join(", ") : "unidade vazia";
 }
 
 function normalizeOptionalText(value) {
