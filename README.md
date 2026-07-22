@@ -167,6 +167,9 @@ Estrutura publica atual:
 
 ```text
 media-history-registry/
+|-- .github/
+|   `-- workflows/
+|       `-- validate.yml
 |-- .gitignore
 |-- README.md
 |-- data/
