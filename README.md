@@ -215,6 +215,7 @@ media-history-registry/
         |   |   |-- LibrarySummary.jsx
         |   |   |-- MediaSections.jsx
         |   |   |-- RecordList.jsx
+        |   |   |-- WatchTimeline.jsx
         |   |   |-- formatting.js
         |   |   `-- useLibraryExplorer.js
         |   |-- MediaItemGenerator.jsx

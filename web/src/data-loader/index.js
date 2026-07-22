@@ -20,6 +20,7 @@ export {
 } from "./filters";
 export { buildCategoryGroups, buildYearGroups, groupRecordsByMediaId } from "./grouping";
 export { buildNormalizedLibrary } from "./normalization";
+export { sortTimelineWatchRecords } from "./sorting";
 export { deriveUnitLabel } from "./unitLabels";
 
 export const staticLibraryData = buildStaticLibraryData({

@@ -29,3 +29,52 @@ export function sortNormalizedWatchRecords(left, right) {
         String(left.id).localeCompare(String(right.id))
     );
 }
+
+export function sortTimelineWatchRecords(left, right) {
+    return (
+        sortYearsAscending(left.year, right.year) ||
+        compareOptionalDate(left.startedAt, right.startedAt) ||
+        compareOptionalDate(left.finishedAt, right.finishedAt) ||
+        getUnitSortKey(left).localeCompare(getUnitSortKey(right)) ||
+        getStableRecordKey(left).localeCompare(getStableRecordKey(right))
+    );
+}
+
+function compareOptionalDate(left, right) {
+    const leftDate = typeof left === "string" && left ? left : "9999-12-31";
+    const rightDate = typeof right === "string" && right ? right : "9999-12-31";
+
+    return leftDate.localeCompare(rightDate);
+}
+
+function getUnitSortKey(record) {
+    const unit = record?.unit || record?.value?.unit || {};
+    const type = typeof unit.type === "string" ? unit.type : "unspecified";
+    const typeRank = {
+        season: 10,
+        limited_season: 20,
+        episode: 30,
+        arc: 40,
+        movie: 50,
+        special: 60,
+        full_work: 70,
+        unspecified: 80
+    };
+
+    return [
+        String(typeRank[type] || 99).padStart(2, "0"),
+        type,
+        padSortNumber(unit.season_number),
+        padSortNumber(unit.episode_number),
+        typeof unit.arc_name === "string" ? unit.arc_name : "",
+        record?.unitLabel || ""
+    ].join("|");
+}
+
+function getStableRecordKey(record) {
+    return String(record?.id || record?.origin?.path || "");
+}
+
+function padSortNumber(value) {
+    return String(Number.isInteger(value) ? value : 0).padStart(6, "0");
+}

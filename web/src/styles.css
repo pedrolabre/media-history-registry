@@ -929,6 +929,182 @@ p {
   text-transform: uppercase;
 }
 
+.media-detail-profile {
+  gap: var(--space-4);
+}
+
+.media-detail-body,
+.media-detail-content,
+.media-external-ids,
+.media-origin {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.media-detail-body-with-poster {
+  grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.media-poster {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  background: var(--color-board);
+  box-shadow: 3px 3px 0 var(--color-shadow);
+}
+
+.media-poster img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-lilac);
+  object-fit: cover;
+}
+
+.media-poster figcaption {
+  color: var(--color-ink);
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.media-external-ids h3,
+.media-origin h3 {
+  margin-bottom: 0;
+}
+
+.media-detail-note,
+.watch-timeline-notes {
+  margin: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: var(--color-lime);
+  box-shadow: 3px 3px 0 var(--color-shadow);
+  color: var(--color-ink);
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.media-detail-note strong,
+.watch-timeline-notes strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-display);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.watch-timeline {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-lilac);
+  box-shadow: var(--shadow-soft);
+}
+
+.watch-timeline-header,
+.watch-timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.watch-timeline-header > div,
+.watch-timeline-card-header > div {
+  min-width: 0;
+}
+
+.watch-timeline-header h2,
+.watch-timeline-header p,
+.watch-timeline-card-header h3,
+.watch-timeline-card-header p {
+  margin-bottom: 0;
+}
+
+.watch-timeline-header p {
+  max-width: 60ch;
+  margin-top: var(--space-2);
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.watch-timeline-header > strong {
+  min-width: 112px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--color-dark);
+  box-shadow: 4px 4px 0 var(--color-coral);
+  color: var(--color-board);
+  font-family: var(--font-display);
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.watch-timeline-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.watch-timeline-card {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-3);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: var(--color-board);
+  box-shadow: 3px 3px 0 var(--color-shadow);
+}
+
+.watch-timeline-item:nth-child(even) .watch-timeline-card {
+  background: #fff7d6;
+}
+
+.watch-timeline-card-header span {
+  display: inline-block;
+  width: fit-content;
+  margin-bottom: var(--space-1);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 4px 7px;
+  background: var(--color-mint);
+  box-shadow: 2px 2px 0 var(--color-shadow);
+  color: var(--color-ink);
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.watch-timeline-card-header p {
+  margin-top: var(--space-1);
+}
+
+.watch-timeline-card-header code {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
 .linked-records {
   display: grid;
   gap: var(--space-2);
@@ -1658,10 +1834,15 @@ p {
   .route-board,
   .library-metrics,
   .normalization-board,
+  .media-detail-body-with-poster,
   .generated-summary,
   .json-file-info,
   .json-actions {
     grid-template-columns: 1fr;
+  }
+
+  .media-poster {
+    width: min(100%, 260px);
   }
 
   .library-filter-grid {
@@ -1776,12 +1957,16 @@ p {
   .category-header,
   .category-media-heading,
   .linked-records-header,
+  .watch-timeline-header,
+  .watch-timeline-card-header,
   .json-output-header {
     display: grid;
   }
 
   .media-profile-heading strong,
-  .category-media-heading strong {
+  .category-media-heading strong,
+  .watch-timeline-header > strong,
+  .watch-timeline-card-header .year-record-unit {
     justify-self: start;
   }
 
