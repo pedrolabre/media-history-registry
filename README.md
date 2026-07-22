@@ -209,11 +209,33 @@ media-history-registry/
         |   |-- FileInfo.jsx
         |   |-- JsonOutputBlock.jsx
         |   |-- JsonPreview.jsx
+        |   |-- library/
+        |   |   |-- LibraryControls.jsx
+        |   |   |-- LibraryStates.jsx
+        |   |   |-- LibrarySummary.jsx
+        |   |   |-- MediaSections.jsx
+        |   |   |-- RecordList.jsx
+        |   |   |-- formatting.js
+        |   |   `-- useLibraryExplorer.js
         |   |-- MediaItemGenerator.jsx
         |   `-- WatchRecordGenerator.jsx
         |-- data-loader/
-        |   `-- index.js
+        |   |-- discovery.js
+        |   |-- filters.js
+        |   |-- grouping.js
+        |   |-- index.js
+        |   |-- metrics.js
+        |   |-- normalization.js
+        |   |-- sorting.js
+        |   `-- unitLabels.js
         |-- main.jsx
+        |-- pages/
+        |   |-- CategoryLibraryPage.jsx
+        |   |-- LibraryPage.jsx
+        |   |-- MediaLibraryPage.jsx
+        |   |-- RouteNotFoundPage.jsx
+        |   `-- YearLibraryPage.jsx
+        |-- routes.jsx
         |-- styles.css
         `-- utils/
             |-- jsonGeneration.js
