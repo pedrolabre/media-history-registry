@@ -1,8 +1,32 @@
-# Media History Registry
+<div align="right">
+  🇧🇷 <b>Português</b> &nbsp;•&nbsp; <a href="./README.en.md">🇺🇸 English</a>
+</div>
 
-> **Your media history belongs to you. Store it as structured data.**
+<div align="center">
 
-Media History Registry e um sistema de dados estruturados para registrar
+![Media History Registry Banner](./assets/banner-animated.svg)
+
+</div>
+
+<div align="center">
+
+![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=18&duration=3000&pause=1000&color=CBA6F7&center=true&vCenter=true&width=750&lines=Seu+historico+audiovisual+pertence+a+voce;Armazenado+inteiramente+como+dados+estruturados;Sem+banco+de+dados%2C+sem+contas%2C+sem+APIs+obrigatorias;Apenas+dados+estruturados%2C+versionados+pelo+Git)
+
+</div>
+
+
+<div align="center">
+
+[![JSON](https://img.shields.io/badge/JSON-Data-CBA6F7?style=for-the-badge&logo=json&logoColor=white)](#-como-os-dados-funcionam)
+[![React](https://img.shields.io/badge/React-18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](#-aplicacao-web)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)](#-aplicacao-web)
+[![GitHub Pages](https://img.shields.io/badge/Deploy-GitHub%20Pages-222222?style=for-the-badge&logo=githubpages&logoColor=white)](#-ci-e-github-pages)
+
+</div>
+
+---
+
+**Media History Registry** e um sistema de dados estruturados para registrar
 historico audiovisual pessoal em arquivos JSON versionados por Git.
 
 Ele nao e um app de streaming, rede social, recomendador, dashboard de
@@ -10,7 +34,42 @@ estatisticas ou gamificador. O objetivo do MVP e simples: permitir que uma
 pessoa descreva obras audiovisuais, registre eventos de consumo e explore esse
 historico em uma SPA estatica, sem entregar a posse dos dados para um backend.
 
-## Estado do MVP
+<div align="center">
+
+<table>
+  <tr>
+    <td align="center" valign="middle" width="80">
+      <img src="./assets/logo.svg" alt="Media History Registry Icon" width="60" height="60">
+    </td>
+    <td>
+      <strong>Media History Registry</strong><br/>
+      <small>Sistema de registro de historico audiovisual baseado em arquivos JSON sob seu controle total.</small><br/>
+      <a href="https://pedrolabre.github.io/media-history-registry/" target="_blank">
+        <img src="https://img.shields.io/badge/Acessar%20Deploy-CBA6F7?style=for-the-badge&logo=github&logoColor=white" alt="Acessar Deploy" height="20">
+      </a>
+    </td>
+  </tr>
+</table>
+
+</div>
+
+---
+
+## 📌 Índice Geral
+
+1. [✅ Estado do MVP](#-estado-do-mvp)
+2. [⚙️ Como os dados funcionam](#-como-os-dados-funcionam)
+3. [📏 Sistema de unidades](#-sistema-de-unidades)
+4. [💻 Aplicacao web](#-aplicacao-web)
+5. [🛠️ Validacao local](#-validacao-local)
+6. [🚀 CI e GitHub Pages](#-ci-e-github-pages)
+7. [📁 Estrutura do projeto](#-estrutura-do-projeto)
+8. [🧠 Decisoes de design](#-decisoes-de-design)
+9. [🚫 Fora do MVP](#-fora-do-mvp)
+
+---
+
+## ✅ Estado do MVP
 
 O MVP atual entrega:
 
@@ -44,7 +103,9 @@ O MVP preserva as regras centrais do projeto:
 - sem `registry.json`, `library.json` ou indice agregado persistido.
 - sem dados derivados salvos como fonte primaria.
 
-## Como os dados funcionam
+---
+
+## ⚙️ Como os dados funcionam
 
 O repositorio e a fonte da verdade. A aplicacao interpreta os arquivos, mas nao
 e dona deles.
@@ -66,7 +127,9 @@ serie, filme, anime, documentario ou especial existe como Media Item; cada
 temporada, filme, episodio, arco, especial, obra completa ou rewatch vira um
 Watch Record ligado por `media_id`.
 
-## Sistema de unidades
+---
+
+## 📏 Sistema de unidades
 
 Watch Records indicam a unidade consumida por meio de `unit.type`.
 
@@ -84,7 +147,9 @@ Watch Records indicam a unidade consumida por meio de `unit.type`.
 Rotulos como `S01`, `LS`, `MOV`, `SP`, `FW` e `ARC` sao derivados pela
 interface. Eles nao sao gravados nos JSONs primarios.
 
-## Aplicacao web
+---
+
+## 💻 Aplicacao web
 
 A SPA fica em `web/` e tem duas frentes.
 
@@ -147,7 +212,9 @@ defensiva em snapshots parciais: ela mostra o registro e exibe um diagnostico
 com id, `media_id`, path de origem, ano, unidade derivada, unidade bruta e acao
 manual esperada.
 
-## Validacao local
+---
+
+## 🛠️ Validacao local
 
 Rode a validacao a partir da raiz do repositorio:
 
@@ -173,7 +240,9 @@ cd web
 npm ci
 ```
 
-## CI e GitHub Pages
+---
+
+## 🚀 CI e GitHub Pages
 
 O projeto possui dois workflows:
 
@@ -191,7 +260,9 @@ como fonte de Pages. O build Vite usa `base: "/media-history-registry/"`, e a
 SPA usa hash routing para funcionar em hosting estatico sem backend, SSR ou
 fallback de servidor.
 
-## Estrutura do projeto
+---
+
+## 📁 Estrutura do projeto
 
 Estrutura publica atual:
 
@@ -205,22 +276,7 @@ media-history-registry/
 |-- README.md
 |-- data/
 |   |-- history/
-|   |   |-- 2024/
-|   |   |   `-- your-name.json
-|   |   `-- 2026/
-|   |       |-- boots-s01.json
-|   |       |-- bridgerton-s04.json
-|   |       |-- spy-family-s02.json
-|   |       `-- typhoon-family.json
 |   `-- media/
-|       |-- anime/
-|       |   `-- spy-family.json
-|       |-- movie/
-|       |   `-- your-name.json
-|       `-- series/
-|           |-- boots.json
-|           |-- bridgerton.json
-|           `-- typhoon-family.json
 |-- examples/
 |   |-- media-example.json
 |   `-- watch-record-example.json
@@ -228,6 +284,8 @@ media-history-registry/
 |   |-- media.schema.json
 |   `-- watch-record.schema.json
 |-- scripts/
+|   |-- README.md
+|   |-- clear-data.js
 |   |-- slugify.js
 |   `-- validate.js
 `-- web/
@@ -282,7 +340,9 @@ media-history-registry/
 Documentos internos de planejamento e conclusao ficam fora da estrutura publica
 por padrao.
 
-## Decisoes de design
+---
+
+## 🧠 Decisoes de design
 
 | Decisao | Justificativa |
 |---|---|
@@ -295,7 +355,9 @@ por padrao.
 | Build estatico | Sem backend, login, API ou infraestrutura obrigatoria |
 | Hash routing | Compatibilidade simples com GitHub Pages |
 
-## Fora do MVP
+---
+
+## 🚫 Fora do MVP
 
 Estas frentes ficam para evolucoes posteriores e nao fazem parte do MVP:
 
@@ -310,3 +372,9 @@ Estas frentes ficam para evolucoes posteriores e nao fazem parte do MVP:
 O projeto foi desenhado para poder crescer nessas direcoes sem quebrar a regra
 principal: o historico audiovisual continua pertencendo ao usuario e vivendo em
 dados estruturados no repositorio.
+
+---
+
+<div align="center">
+Desenvolvido por <b>Pedro Labre</b>
+</div>
