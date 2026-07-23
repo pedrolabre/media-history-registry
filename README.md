@@ -2,166 +2,196 @@
 
 > **Your media history belongs to you. Store it as structured data.**
 
----
+Media History Registry e um sistema de dados estruturados para registrar
+historico audiovisual pessoal em arquivos JSON versionados por Git.
 
-## O que e isso?
+Ele nao e um app de streaming, rede social, recomendador, dashboard de
+estatisticas ou gamificador. O objetivo do MVP e simples: permitir que uma
+pessoa descreva obras audiovisuais, registre eventos de consumo e explore esse
+historico em uma SPA estatica, sem entregar a posse dos dados para um backend.
 
-Media History Registry nao e um app de streaming. Nao e uma rede social. Nao e
-um recomendador. Nao e um gamificador para assistir mais coisas.
+## Estado do MVP
 
-E um **sistema de dados estruturados** para transformar o historico audiovisual
-pessoal em um registro pesquisavel, versionavel e portatil, armazenado como
-arquivos JSON em um repositorio GitHub que **voce** controla.
+O MVP atual entrega:
 
-Sem banco de dados. Sem contas. Sem backend obrigatorio. Sem API externa
-necessaria para o funcionamento principal. Apenas dados estruturados,
-versionados pelo Git.
+- dados primarios em `data/media/` e `data/history/`.
+- schemas JSON para Media Item e Watch Record.
+- validacao local dos JSONs, paths, ids, anos, datas e relacoes `media_id`.
+- SPA estatica em React + Vite + JavaScript.
+- carregamento dos JSONs por `import.meta.glob` durante o build.
+- biblioteca visual por ano, midia e categoria.
+- filtros por categoria, subcategoria, genero, status pessoal, status de
+  producao, plataforma e ano.
+- ordenacao por ano, titulo e status pessoal.
+- gerador de Media Item com preview, copia, download, filename e path esperado.
+- gerador de Watch Record com seletor de Media Item existente.
+- fallback manual explicito para `media_id` ainda nao commitado.
+- sugestao editavel de unidade a partir do formato da midia selecionada.
+- pagina de detalhe de Media Item com metadados completos ja existentes.
+- timeline de Watch Records derivada em runtime.
+- diagnostico de Watch Records orfaos com path, `media_id`, ano e unidade.
+- hash routing compativel com GitHub Pages.
+- workflow de validacao em CI.
+- workflow de deploy estatico para GitHub Pages.
 
----
+O MVP preserva as regras centrais do projeto:
 
-## Por que existe?
+- sem backend.
+- sem banco de dados.
+- sem login.
+- sem API externa obrigatoria.
+- sem escrita automatica no GitHub.
+- sem `registry.json`, `library.json` ou indice agregado persistido.
+- sem dados derivados salvos como fonte primaria.
 
-Esse projeto nasceu de uma necessidade pessoal: **a preocupacao em registrar o
-que foi assistido ao longo dos anos**.
+## Como os dados funcionam
 
-Nao e "quero descobrir o que assistir". Nao e "quero competir com outras
-pessoas". E: *"quero uma forma confiavel de documentar minha historia de
-series, filmes, animes, documentarios, K-dramas e especiais sem depender de uma
-plataforma fechada."*
-
-A ideia parte de perguntas simples:
-
-- O que eu assisti em 2026?
-- Quais temporadas de uma serie eu ja conclui?
-- Quando eu assisti determinado anime?
-- Quais obras foram canceladas pela plataforma, mas eu ainda completei?
-- Quais series eu dropei, pausei ou estou assistindo?
-- Quais K-dramas, filmes, documentarios ou especiais aparecem no meu historico?
-
-E tudo isso **sem banco de dados remoto**. O repositorio e a fonte da verdade.
-
----
-
-## Como funciona?
-
-### Camada de dados
-
-Os dados sao organizados em arquivos JSON dentro do repositorio:
-
-| Conceito | Descricao |
-|---|---|
-| **Media Item** | Define a obra: serie, filme, anime, documentario, especial etc. |
-| **Watch Record** | Define um evento de consumo: o que foi assistido, em que ano, qual unidade e com qual status pessoal |
-| **Derived Library View** | A visualizacao calculada pela aplicacao a partir dos arquivos JSON |
-
-A separacao principal e esta:
+O repositorio e a fonte da verdade. A aplicacao interpreta os arquivos, mas nao
+e dona deles.
 
 ```text
 Media Item = o que existe
 Watch Record = o que voce consumiu
-Library View = como o app mostra
+Derived Library View = como a aplicacao mostra
 ```
 
-Isso evita duplicar metadados da mesma obra em varios anos. A obra existe uma
-vez; cada temporada, filme, episodio, arco, especial ou rewatch vira um registro
-proprio.
+| Conceito | Onde vive | Papel |
+|---|---|---|
+| Media Item | `data/media/{category}/{id}.json` | Descreve a obra uma vez |
+| Watch Record | `data/history/{year}/{slug}.json` | Registra um evento de consumo |
+| Derived Library View | Runtime da SPA | Agrupa, filtra, ordena e rotula dados |
 
-<details>
-<summary><strong>Exemplo minimo de Media Item</strong></summary>
+Essa separacao evita duplicar metadados da mesma obra em varios anos. Uma
+serie, filme, anime, documentario ou especial existe como Media Item; cada
+temporada, filme, episodio, arco, especial, obra completa ou rewatch vira um
+Watch Record ligado por `media_id`.
 
-```json
-{
-  "id": "attack-on-titan",
-  "title": "Attack on Titan",
-  "original_title": "Shingeki no Kyojin",
-  "category": "anime",
-  "subcategories": [],
-  "format": "series",
-  "status": "ended",
-  "genres": ["action", "dark-fantasy"],
-  "countries": ["JP"],
-  "studios": ["Wit Studio", "MAPPA"],
-  "directors": [],
-  "first_release_year": 2013,
-  "external_ids": {
-    "imdb": null,
-    "tmdb": null,
-    "anilist": null,
-    "myanimelist": null
-  },
-  "poster": null,
-  "notes": null
-}
-```
+## Sistema de unidades
 
-</details>
-
-<details>
-<summary><strong>Exemplo minimo de Watch Record</strong></summary>
-
-```json
-{
-  "id": "2026-attack-on-titan-s04",
-  "media_id": "attack-on-titan",
-  "year": 2026,
-  "unit": {
-    "type": "season",
-    "season_number": 4
-  },
-  "watch_status": "completed",
-  "started_at": null,
-  "finished_at": null,
-  "platform": "Crunchyroll",
-  "rewatch": false,
-  "rating": null,
-  "favorite": false,
-  "notes": null
-}
-```
-
-</details>
-
-### Sistema de unidades
-
-Conteudo audiovisual nao tem uma unica metrica linear como paginas de um livro.
-Por isso, cada Watch Record informa a unidade assistida:
+Watch Records indicam a unidade consumida por meio de `unit.type`.
 
 | Unidade | Uso |
 |---|---|
 | `season` | Temporada numerada |
-| `limited_season` | Obra de temporada unica ou minisserie |
+| `limited_season` | Temporada limitada ou minisserie |
 | `episode` | Episodio especifico |
-| `arc` | Arco narrativo, comum em animes longos |
+| `arc` | Arco narrativo |
 | `movie` | Filme |
-| `special` | Especial, OVA ou conteudo extra |
+| `special` | Especial ou conteudo extra |
 | `full_work` | Obra inteira como unidade unica |
 | `unspecified` | Unidade desconhecida ou indefinida |
 
-Os rotulos visuais como `S01`, `S04`, `LS`, `MOV` e `SP` sao derivados pelo app.
-Eles nao ficam salvos no JSON.
+Rotulos como `S01`, `LS`, `MOV`, `SP`, `FW` e `ARC` sao derivados pela
+interface. Eles nao sao gravados nos JSONs primarios.
 
-### Aplicacao web
+## Aplicacao web
 
-A aplicacao web tem dois propositos:
+A SPA fica em `web/` e tem duas frentes.
 
-1. **Geracao de dados** - Formularios que produzem arquivos JSON validos, com
-   nome de arquivo e caminho esperados. Voce preenche, copia ou baixa o JSON e
-   faz o commit manualmente.
+### Biblioteca
 
-2. **Visualizacao de dados** - O app le os arquivos JSON do repositorio durante
-   o build e monta uma biblioteca visual. Filtros, ordenacao, agrupamentos e
-   rotulos sao derivados em runtime.
+A biblioteca le os JSONs do repositorio durante o build e monta um snapshot
+estatico. As rotas principais sao:
 
-### O commit e manual
+| Rota logica | Hash no Pages | Conteudo |
+|---|---|---|
+| `/` ou `/library` | `#/` ou `#/library` | Biblioteca por ano |
+| `/library/year/:year` | `#/library/year/2026` | Recorte de um ano |
+| `/library/media/:id` | `#/library/media/spy-family` | Detalhe de uma obra |
+| `/library/category/:category` | `#/library/category/anime` | Recorte por categoria |
+| `/generate/media` | `#/generate/media` | Gerador de Media Item |
+| `/generate/watch-record` | `#/generate/watch-record` | Gerador de Watch Record |
 
-Isso e intencional. A aplicacao web **nao** faz push no GitHub. Ela gera
-arquivos. Voce decide quando salvar, commitar e enviar.
+A biblioteca mostra contagens, recortes, estados vazios e dados parciais de
+forma recuperavel. Filtros e ordenacao existem apenas na UI; nenhuma
+preferencia e salva em JSON, URL, localStorage ou backend.
 
-Esse fluxo mantem o historico simples, transparente e sob seu controle.
+### Geradores
 
----
+Os geradores produzem JSON formatado, nome de arquivo e caminho recomendado.
+Eles permitem copiar ou baixar o arquivo, mas nao salvam nada no repositorio.
 
-## Estrutura do Projeto
+Fluxo esperado:
+
+1. preencher o formulario.
+2. copiar ou baixar o JSON gerado.
+3. salvar o arquivo no caminho indicado em `data/`.
+4. rodar a validacao local.
+5. fazer `git add`, `git commit` e `git push` manualmente.
+
+O gerador de Watch Record prefere selecionar um Media Item ja carregado, com
+busca local por titulo, id, categoria, formato e subcategorias. O modo manual
+continua disponivel para o caso em que a obra e o registro estao sendo criados
+juntos antes de qualquer commit.
+
+### Detalhe e timeline
+
+A pagina de midia exibe os campos ja existentes do Media Item: titulo, titulo
+original, categoria, subcategorias, formato, status de producao, generos,
+paises, estudios, diretores, primeiro ano, poster quando existir, external ids,
+notas e origem do arquivo.
+
+A timeline e derivada dos Watch Records ligados. A ordem e calculada por ano,
+datas, unidade e identificador estavel. Ela exibe status pessoal, datas,
+plataforma, rewatch, favorito, rating e notas quando esses dados existem.
+
+Nada da timeline e salvo em arquivo derivado.
+
+### Orfaos
+
+Um Watch Record orfao e um registro cujo `media_id` nao encontra Media Item
+correspondente em `data/media/`.
+
+O validador local e o CI podem falhar para essa relacao invalida. A UI continua
+defensiva em snapshots parciais: ela mostra o registro e exibe um diagnostico
+com id, `media_id`, path de origem, ano, unidade derivada, unidade bruta e acao
+manual esperada.
+
+## Validacao local
+
+Rode a validacao a partir da raiz do repositorio:
+
+```powershell
+node scripts\validate.js
+node --check scripts\validate.js
+node --check scripts\slugify.js
+Get-Content -Raw -LiteralPath web\package.json | ConvertFrom-Json | Out-Null
+node -e "const fs=require('fs'); JSON.parse(fs.readFileSync('web/package-lock.json','utf8'));"
+```
+
+O build da SPA deve ser executado dentro de `web/`:
+
+```powershell
+cd web
+npm run build
+```
+
+Para uma instalacao limpa das dependencias do frontend:
+
+```powershell
+cd web
+npm ci
+```
+
+## CI e GitHub Pages
+
+O projeto possui dois workflows:
+
+| Workflow | Quando roda | Papel |
+|---|---|---|
+| `.github/workflows/validate.yml` | `push` e `pull_request` | Valida dados, scripts, lockfile e build web |
+| `.github/workflows/deploy-pages.yml` | `push` em `main` e `workflow_dispatch` | Valida, builda e publica `web/dist` no GitHub Pages |
+
+Ambos usam Node `22.12.0`, instalam dependencias com `npm ci` dentro de
+`web/`, rodam lint/test apenas se os scripts existirem e executam
+`npm run build`.
+
+Para publicar no GitHub Pages, configure o repositorio para usar GitHub Actions
+como fonte de Pages. O build Vite usa `base: "/media-history-registry/"`, e a
+SPA usa hash routing para funcionar em hosting estatico sem backend, SSR ou
+fallback de servidor.
+
+## Estrutura do projeto
 
 Estrutura publica atual:
 
@@ -213,17 +243,17 @@ media-history-registry/
         |   |-- FileInfo.jsx
         |   |-- JsonOutputBlock.jsx
         |   |-- JsonPreview.jsx
-        |   |-- library/
-        |   |   |-- LibraryControls.jsx
-        |   |   |-- LibraryStates.jsx
-        |   |   |-- LibrarySummary.jsx
-        |   |   |-- MediaSections.jsx
-        |   |   |-- RecordList.jsx
-        |   |   |-- WatchTimeline.jsx
-        |   |   |-- formatting.js
-        |   |   `-- useLibraryExplorer.js
         |   |-- MediaItemGenerator.jsx
-        |   `-- WatchRecordGenerator.jsx
+        |   |-- WatchRecordGenerator.jsx
+        |   `-- library/
+        |       |-- LibraryControls.jsx
+        |       |-- LibraryStates.jsx
+        |       |-- LibrarySummary.jsx
+        |       |-- MediaSections.jsx
+        |       |-- RecordList.jsx
+        |       |-- WatchTimeline.jsx
+        |       |-- formatting.js
+        |       `-- useLibraryExplorer.js
         |-- data-loader/
         |   |-- discovery.js
         |   |-- filters.js
@@ -249,35 +279,34 @@ media-history-registry/
             `-- watchRecordGenerator.js
 ```
 
-> A estrutura vai crescer junto com o codigo. Tudo que for adicionado deve
-> aparecer aqui quando virar parte publica do projeto. Documentos internos de
-> planejamento, como planos e prompts de execucao, ficam fora dos commits de
-> produto por padrao.
-
----
-
-## Deploy estatico
-
-O MVP planejado sera uma SPA estatica publicada no GitHub Pages por GitHub
-Actions.
-
-- O app usa Vite e `import.meta.glob` para descobrir JSONs em `data/media/` e
-  `data/history/` durante o build.
-- A biblioteca publicada e um snapshot estatico do repositorio naquele commit.
-- Novos registros entram no site depois de commit, push e novo build.
-- Nenhuma API externa, login, backend ou credencial e exigida para o core.
-
----
+Documentos internos de planejamento e conclusao ficam fora da estrutura publica
+por padrao.
 
 ## Decisoes de design
 
 | Decisao | Justificativa |
 |---|---|
-| **JSON ao inves de banco de dados** | Arquivos sao legiveis por humanos, portateis e versionaveis |
-| **Media Item separado de Watch Record** | A obra e descrita uma vez; cada consumo referencia essa obra |
-| **Um arquivo por registro** | Diffs pequenos, menos conflitos e historico Git mais claro |
-| **Rotulos derivados** | `S01`, `LS`, `MOV` e similares pertencem a UI, nao aos dados primarios |
-| **Status separado** | `cancelled` da obra nao e igual a `dropped` do usuario |
-| **Commit manual** | O usuario mantem controle total sobre o repositorio |
-| **React + Vite + JavaScript** | Boa base para formularios, validacao, biblioteca visual e build estatico |
-| **Sem API externa obrigatoria** | O dado continua util mesmo se qualquer servico externo desaparecer |
+| JSON em vez de banco | Arquivos legiveis, portateis e versionaveis |
+| Um arquivo por entidade | Diffs pequenos e menos conflitos |
+| Media Item separado de Watch Record | Metadados da obra existem uma vez |
+| Rotulos derivados | UI pode mudar sem migrar dados primarios |
+| Status separados | `cancelled` da obra nao e `dropped` do usuario |
+| Commit manual | O usuario controla quando salvar e publicar |
+| Build estatico | Sem backend, login, API ou infraestrutura obrigatoria |
+| Hash routing | Compatibilidade simples com GitHub Pages |
+
+## Fora do MVP
+
+Estas frentes ficam para evolucoes posteriores e nao fazem parte do MVP:
+
+- busca global.
+- estatisticas avancadas.
+- posters obrigatorios ou enriquecimento visual.
+- importacao ou exportacao.
+- integracoes com APIs externas.
+- escrita automatica no GitHub.
+- backend, banco, login, OAuth, SSR ou suporte multiusuario.
+
+O projeto foi desenhado para poder crescer nessas direcoes sem quebrar a regra
+principal: o historico audiovisual continua pertencendo ao usuario e vivendo em
+dados estruturados no repositorio.
